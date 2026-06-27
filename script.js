@@ -1,78 +1,72 @@
-document.addEventListener("DOMContentLoaded", () => {
-    
+document.addEventListener("DOMContentLoaded", function() {
     const formProducto = document.getElementById("formProducto");
-    const inputNombre = document.getElementById("prodNombre");
-    const selectCategoria = document.getElementById("prodCategoria");
-    const txtDescripcion = document.getElementById("prodDescripcion");
-    
+    const prodNombre = document.getElementById("prodNombre");
+    const prodCategoria = document.getElementById("prodCategoria");
+    const prodDescripcion = document.getElementById("prodDescripcion");
     const listaFavoritos = document.getElementById("listaFavoritos");
     const contadorProductos = document.getElementById("contadorProductos");
     const mensajeValidacion = document.getElementById("mensajeValidacion");
 
     let totalProductos = 0;
 
-    function actualizarContador() {
-        contadorProductos.innerText = `Total productos: ${totalProductos}`;
-    }
+    formProducto.addEventListener("submit", function(event) {
+        event.preventDefault();
 
-    formProducto.addEventListener("submit", (evento) => {
-        evento.preventDefault();
-
-        const nombre = inputNombre.value.trim();
-        const categoria = selectCategoria.value;
-        const descripcion = txtDescripcion.value.trim();
+        const nombre = prodNombre.value.trim();
+        const categoria = prodCategoria.value;
+        const descripcion = prodDescripcion.value.trim();
 
         if (nombre === "" || categoria === "" || descripcion === "") {
-            mostrarMensaje("Por favor, completa todos los campos del formulario.", "alert-danger");
+            mensajeValidacion.className = "alert alert-danger";
+            mensajeValidacion.textContent = "Todos los campos son obligatorios.";
             return;
         }
 
-        mensajeValidacion.classList.add("d-none");
+        mensajeValidacion.className = "alert alert-success";
+        mensajeValidacion.textContent = "Producto registrado correctamente.";
+        
+        setTimeout(() => {
+            mensajeValidacion.className = "alert d-none";
+        }, 3000);
 
-        const colDiv = document.createElement("div");
-        colDiv.classList.add("col-md-6", "mb-3");
+        const col = document.createElement("div");
+        col.className = "col-md-6 mb-3";
 
-        const cardDiv = document.createElement("div");
-        cardDiv.classList.add("card-dinamica", "shadow-sm");
+        const card = document.createElement("div");
+        card.className = "card card-dinamica h-100 p-3 shadow-sm";
 
-        const tituloElemento = document.createElement("h5");
-        tituloElemento.innerText = nombre;
+        const badge = document.createElement("span");
+        badge.className = "badge badge-categoria align-self-start";
+        badge.textContent = categoria;
 
-        const categoriaSpan = document.createElement("span");
-        categoriaSpan.classList.add("badge", "badge-categoria");
-        categoriaSpan.innerText = categoria;
+        const titulo = document.createElement("h5");
+        titulo.className = "mt-2";
+        titulo.textContent = nombre;
 
-        const descElemento = document.createElement("p");
-        descElemento.innerText = descripcion;
+        const parrafo = document.createElement("p");
+        parrafo.className = "text-muted small";
+        parrafo.textContent = descripcion;
 
         const btnEliminar = document.createElement("button");
-        btnEliminar.classList.add("btn", "btn-danger", "btn-sm", "mt-2");
-        btnEliminar.innerText = "❌ Eliminar";
+        btnEliminar.className = "btn btn-danger btn-sm w-100 mt-auto";
+        btnEliminar.textContent = "Eliminar";
 
-        btnEliminar.addEventListener("click", () => {
-            colDiv.remove();
+        btnEliminar.addEventListener("click", function() {
+            col.remove();
             totalProductos--;
-            actualizarContador();
+            contadorProductos.textContent = "Total productos: " + totalProductos;
         });
 
-        cardDiv.appendChild(categoriaSpan);
-        cardDiv.appendChild(tituloElemento);
-        cardDiv.appendChild(descElemento);
-        cardDiv.appendChild(btnEliminar);
-        colDiv.appendChild(cardDiv);
-        
-        listaFavoritos.appendChild(colDiv);
+        card.appendChild(badge);
+        card.appendChild(titulo);
+        card.appendChild(parrafo);
+        card.appendChild(btnEliminar);
+        col.appendChild(card);
+        listaFavoritos.appendChild(col);
 
         totalProductos++;
-        actualizarContador();
-        mostrarMensaje("✨ ¡Producto añadido con éxito!", "alert-success");
+        contadorProductos.textContent = "Total productos: " + totalProductos;
 
         formProducto.reset();
     });
-
-    function mostrarMensaje(texto, claseBootstrap) {
-        mensajeValidacion.innerText = texto;
-        mensajeValidacion.className = `alert ${claseBootstrap} text-center py-2`;
-        mensajeValidacion.classList.remove("d-none");
-    }
 });
