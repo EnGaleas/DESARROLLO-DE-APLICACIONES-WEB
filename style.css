@@ -1,4 +1,8 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght=300;400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+
+* {
+    scroll-behavior: smooth;
+}
 
 body {
     background-color: #f7d8e4;
@@ -13,6 +17,12 @@ header {
     padding: 35px;
     box-shadow: 0 8px 24px rgba(247, 85, 225, 0.15);
     border: 2px solid #ffffff;
+}
+
+header .tagline {
+    color: #9b5de5;
+    font-weight: 600;
+    margin: 0;
 }
 
 h1 {
@@ -69,14 +79,55 @@ h2 {
     border: 1px solid #ffebf0;
 }
 
+.seccion-inicio {
+    background: linear-gradient(135deg, #ffffff, #fff0f6);
+}
+
+.seccion-quienes {
+    background: linear-gradient(135deg, #f3faff, #ffffff);
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+.seccion-productos {
+    background: linear-gradient(135deg, #fff8fb, #f5eeff);
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+.intro-productos {
+    color: #9b5de5;
+    font-weight: 600;
+    margin-bottom: 25px;
+}
+
+.seccion-contacto {
+    background: linear-gradient(135deg, #eefcff, #fff5f8);
+    border-radius: 30px;
+    padding: 30px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.04);
+}
+
+.seccion-promos {
+    background: linear-gradient(135deg, #eefcff, #f3e8ff);
+}
+
 .navbar {
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     border-radius: 0 0 20px 20px;
     background-color: #2b2d42 !important;
 }
 
-.nav-link:hover {
+.nav-link {
+    transition: color 0.2s ease;
+}
+
+.nav-link:hover,
+.nav-link.active {
     color: #f755e1 !important;
+    font-weight: 600;
 }
 
 img {
@@ -101,6 +152,10 @@ form {
 .form-control:focus, .form-select:focus {
     border-color: #f755e1;
     box-shadow: 0 0 0 0.25rem rgba(247, 85, 225, 0.25);
+}
+
+.form-text {
+    transition: all 0.2s ease;
 }
 
 .btn {
@@ -195,9 +250,18 @@ footer {
     transition: all 0.3s ease;
 }
 
+.card-dinamica:hover {
+    transform: translateY(-4px);
+    border-color: #f755e1 !important;
+}
+
 .card-dinamica h5 {
     color: #5c1d24 !important;
     font-weight: bold !important;
+}
+
+.card-dinamica p {
+    text-align: left !important;
 }
 
 .badge-categoria {
@@ -210,9 +274,143 @@ footer {
     margin-bottom: 5px;
 }
 
+.card-catalogo {
+    background-color: #fff2ea;
+    border: 2px solid #ecd3c5;
+    border-radius: 18px;
+    padding: 20px;
+    height: 100%;
+    text-align: center;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.card-catalogo:hover {
+    transform: translateY(-6px) scale(1.02);
+    border-color: #f755e1;
+    box-shadow: 0 10px 24px rgba(247, 85, 225, 0.2);
+}
+
+.card-catalogo .icono {
+    font-size: 2.5rem;
+    margin-bottom: 8px;
+}
+
+.badge-estado {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+.badge-disponible {
+    background-color: #d7f5df;
+    color: #1c8a45;
+}
+
+.badge-agotado {
+    background-color: #fbdada;
+    color: #c22a2a;
+}
+
+.btn-filtro {
+    background-color: white;
+    color: #9b5de5;
+    border: 2px solid #e8d6ff;
+    border-radius: 25px;
+    font-weight: 600;
+    padding: 8px 18px;
+    transition: all 0.25s ease;
+}
+
+.btn-filtro:hover {
+    background-color: #f3e8ff;
+}
+
+.btn-filtro.active {
+    background-color: #9b5de5;
+    color: white;
+    border-color: #9b5de5;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 18px;
+    padding: 18px 10px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.05);
+    border: 2px solid #ffe5ec;
+    transition: transform 0.25s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+}
+
+.stat-numero {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #f755e1;
+}
+
+.stat-label {
+    font-size: 0.85rem;
+    color: #7a7a7a;
+    font-weight: 600;
+}
+
+.stat-disponible .stat-numero { color: #1c8a45; }
+.stat-agotado .stat-numero { color: #c22a2a; }
+.stat-registrados .stat-numero { color: #9b5de5; }
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in-card {
+    animation: fadeInUp 0.45s ease both;
+}
+
+.btn-subir {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #f755e1;
+    color: white;
+    border: none;
+    font-size: 1.3rem;
+    box-shadow: 0 6px 16px rgba(247, 85, 225, 0.35);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1050;
+    transition: all 0.25s ease;
+}
+
+.btn-subir.mostrar {
+    display: flex;
+}
+
+.btn-subir:hover {
+    background-color: #d63cb0;
+    transform: translateY(-3px);
+}
+
+.toast.bg-exito { background-color: #1c8a45; }
+.toast.bg-error { background-color: #c22a2a; }
+
 @media (max-width:768px) {
     header { margin:10px; padding:20px; }
     h1 { font-size:24px; }
-    .card, .card-dinamica { margin-bottom:15px; }
+    .card, .card-dinamica, .card-catalogo { margin-bottom:15px; }
     aside { padding: 20px !important; }
+    .btn-subir { width: 42px; height: 42px; bottom: 15px; right: 15px; }
 }

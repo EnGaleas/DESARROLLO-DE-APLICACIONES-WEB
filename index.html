@@ -1,207 +1,271 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- ============================================================ -->
+    <!-- Este bloque equivale a {% block title %}{% endblock %} de base.html -->
+    <!-- ============================================================ -->
     <title>Brilla Hermosa Mujer</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:,">
 </head>
-
 <body>
 
-<header class="text-center p-3">
-    <img src="Logo.png" alt="Logo" width="150">
-    <h1 class="mt-3">BRILLA HERMOSA MUJER</h1>
-</header>
+<!-- ================================================================== -->
+<!-- INICIO PLANTILLA BASE (futuro base.html en Flask)                   -->
+<!-- Esta parte se repite en todas las páginas del sitio, por eso        -->
+<!-- se convertirá en un archivo independiente reutilizable (base.html)  -->
+<!-- ================================================================== -->
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-    <div class="container">
-        <a class="navbar-brand" href="#">BHM</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="menu">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
-                <li class="nav-item"><a class="nav-link" href="#quienes">Quiénes Somos</a></li>
-                <li class="nav-item"><a class="nav-link" href="#productos">Productos</a></li>
-                <li class="nav-item"><a class="nav-link" href="#favoritos">Registrar Producto</a></li>
-                <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
-            </ul>
+    <!-- INICIO: encabezado.html -> {% include "encabezado.html" %} -->
+    <header class="text-center p-3">
+        <img src="Logo.png" alt="Logo" width="150">
+        <h1 class="mt-3">BRILLA HERMOSA MUJER</h1>
+        <p class="tagline">Resalta tu belleza natural</p>
+    </header>
+    <!-- FIN: encabezado.html -->
+
+    <!-- INICIO: menu.html -> {% include "menu.html" %} -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top">
+        <div class="container">
+            <a class="navbar-brand" href="#inicio">BHM</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="menu">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="#inicio">Inicio</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#quienes">Quiénes Somos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#productos">Productos</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#favoritos">Registrar Producto</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contacto">Contacto</a></li>
+                </ul>
+            </div>
         </div>
-    </div>
-</nav>
+    </nav>
+    <!-- FIN: menu.html -->
 
+<!-- ================================================================== -->
+<!-- FIN PLANTILLA BASE                                                  -->
+<!-- ================================================================== -->
+
+
+<!-- ================================================================== -->
+<!-- INICIO CONTENIDO DINÁMICO -> {% block content %}{% endblock %}      -->
+<!-- Esta zona cambia según la vista (index.html hijo de base.html)      -->
+<!-- ================================================================== -->
 <main class="container">
 
-<section id="inicio" class="hero text-center p-5 m-3">
-    <h2>Inicio</h2>
-    <p class="text-justify-custom">
-        Bienvenida a Brilla Hermosa Mujer, un espacio creado para inspirarte,
-        acompañarte y ayudarte a resaltar tu beauty natural a través del maquillaje.
-        Aquí encontrarás productos pensados para realzar tu estilo, tu personalidad
-        y tu confianza.
-    </p>
-</section>
+    <section id="inicio" class="hero text-center p-5 m-3 seccion-inicio">
+        <h2>Inicio</h2>
+        <p class="text-justify-custom">
+            Bienvenida a Brilla Hermosa Mujer, un espacio creado para inspirarte,
+            acompañarte y ayudarte a resaltar tu belleza natural a través del maquillaje.
+            Aquí encontrarás productos pensados para realzar tu estilo, tu personalidad
+            y tu confianza.
+        </p>
+    </section>
 
-<section id="quienes" class="m-3">
-    <article>
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <h2 class="mb-3">¿Quiénes Somos?</h2>
-                    <p class="text-justify-custom">
-                        Brilla Hermosa Mujer es un emprendimiento dedicado al mundo del maquillaje y la belleza femenina,
-                        creado con el propósito de ayudar a cada mujer a resaltar su belleza natural, fortalecer su autoestima
-                        y expresar su personalidad a través del arte del maquillaje.
-                    </p>
-                    <p class="text-justify-custom">
-                        Creemos firmemente que cada persona es única y merece sentirse segura, auténtica y valiosa en cada momento
-                        de su vida, por ello ofrecemos productos de alta calidad, modernos y accesibles.
-                    </p>
-                    <p class="text-justify-custom">
-                        Nuestro compromiso va más allá de la venta de productos; buscamos brindar una experiencia cercana,
-                        amable y confiable donde cada clienta reciba asesoría y acompañamiento.
-                    </p>
+    <section id="quienes" class="m-3 seccion-quienes">
+        <article>
+            <div class="container">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h2 class="mb-3">¿Quiénes Somos?</h2>
+                        <p class="text-justify-custom">
+                            Brilla Hermosa Mujer es un emprendimiento dedicado al mundo del maquillaje y la belleza femenina,
+                            creado con el propósito de ayudar a cada mujer a resaltar su belleza natural, fortalecer su autoestima
+                            y expresar su personalidad a través del arte del maquillaje.
+                        </p>
+                        <p class="text-justify-custom">
+                            Creemos firmemente que cada persona es única y merece sentirse segura, auténtica y valiosa en cada momento
+                            de su vida, por ello ofrecemos productos de alta calidad, modernos y accesibles.
+                        </p>
+                        <p class="text-justify-custom">
+                            Nuestro compromiso va más allá de la venta de productos; buscamos brindar una experiencia cercana,
+                            amable y confiable donde cada clienta reciba asesoría y acompañamiento.
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <img src="Maquillaje.png" class="img-fluid" alt="Productos de maquillaje">
+                    </div>
                 </div>
-                <div class="col-md-6 text-center">
-                    <img src="Maquillaje.png" class="img-fluid" alt="Productos de maquillaje">
+            </div>
+        </article>
+    </section>
+
+    <section id="productos" class="m-3 seccion-productos">
+        <h2 class="text-center mb-4">Productos</h2>
+        <p class="text-center intro-productos">Los productos de maquillaje que contamos son los siguientes:</p>
+
+        <div class="row text-center mb-4 g-3">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <span class="stat-numero" id="statTotal">0</span>
+                    <span class="stat-label">En catálogo</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-disponible">
+                    <span class="stat-numero" id="statDisponibles">0</span>
+                    <span class="stat-label">Disponibles</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-agotado">
+                    <span class="stat-numero" id="statAgotados">0</span>
+                    <span class="stat-label">Agotados</span>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card stat-registrados">
+                    <span class="stat-numero" id="statRegistrados">0</span>
+                    <span class="stat-label">Registrados por ti</span>
                 </div>
             </div>
         </div>
-    </article>
-</section>
 
-<section id="productos" class="m-3">
-    <h2 class="text-center mb-4">Productos</h2>
-    <div class="row">
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Labiales</h5><p>Variedad de colores y acabados para cada ocasión.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Gloss</h5><p>Brillo y suavidad para resaltar tus labios.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Rímel</h5><p>Mayor volumen y definición para tus pestañas.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Bases de Maquillaje</h5><p>Cobertura uniforme para diferentes tipos de piel.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Correctores</h5><p>Ayudan a cubrir imperfecciones y ojeras.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Rubores</h5><p>Color natural para realzar tu rostro.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Sombras para Ojos</h5><p>Diferentes tonos para cualquier estilo.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Delineadores</h5><p>Precisión y definición para tu mirada.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Brochas</h5><p>Herramientas ideales para una aplicación profesional.</p></div></div>
-        <div class="col-md-4 mb-4"><div class="card p-3 h-100"><h5>Esponjas de Maquillaje</h5><p>Acabados suaves y naturales.</p></div></div>
-    </div>
-    <p class="text-center mt-3">Además contamos con muchos otros productos de belleza y maquillaje para realzar tu belleza natural.</p>
-</section>
-
-<section id="favoritos" class="m-3 p-4 seccion-dinamica">
-    <h2 class="text-center mb-4">Registrar Nuevo Producto</h2>
-    <div class="row">
-        <div class="col-md-5 mb-4">
-            <form id="formProducto" class="p-4 shadow-sm" novalidate>
-                <div id="mensajeValidacion" class="alert d-none" role="alert"></div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Nombre del Producto</label>
-                    <input type="text" id="prodNombre" class="form-control" placeholder="Ej. Labial">
-                    <div id="errProdNombre" class="form-text text-muted">Debe tener mínimo 5 caracteres, iniciar con Mayúscula y el resto en minúsculas.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Categoría</label>
-                    <select id="prodCategoria" class="form-select">
-                        <option value="">-- Selecciona --</option>
-                        <option value="Labios">Labios</option>
-                        <option value="Rostro">Rostro</option>
-                        <option value="Ojos">Ojos</option>
-                        <option value="Accesorios">Accesorios</option>
-                    </select>
-                    <div id="errProdCategoria" class="form-text text-muted">Debe seleccionar una categoría para el producto.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Descripción</label>
-                    <textarea id="prodDescripcion" class="form-control" rows="3" placeholder="Ej. Larga duración"></textarea>
-                    <div id="errProdDescripcion" class="form-text text-muted">Debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 10 caracteres.</div>
-                </div>
-                <button type="submit" class="btn btn-rosa w-100">Registrar Producto</button>
-            </form>
+        <div class="d-flex flex-wrap justify-content-center gap-2 mb-4" id="filtrosCategoria">
+            <button class="btn btn-filtro active" data-categoria="todos">Todos</button>
+            <button class="btn btn-filtro" data-categoria="Labios">Labios</button>
+            <button class="btn btn-filtro" data-categoria="Rostro">Rostro</button>
+            <button class="btn btn-filtro" data-categoria="Ojos">Ojos</button>
+            <button class="btn btn-filtro" data-categoria="Accesorios">Accesorios</button>
         </div>
-        <div class="col-md-7">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-                <h5>Inventario de Productos</h5>
-                <span class="badge bg-purple p-2 fs-6" id="contadorProductos">Total productos: 0</span>
+
+        <div class="row" id="catalogoProductos"></div>
+    </section>
+
+    <section id="favoritos" class="m-3 p-4 seccion-dinamica">
+        <h2 class="text-center mb-4">Registrar Nuevo Producto</h2>
+        <div class="row">
+            <div class="col-md-5 mb-4">
+                <form id="formProducto" class="p-4 shadow-sm" novalidate>
+                    <div id="mensajeValidacion" class="alert d-none" role="alert"></div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nombre del Producto</label>
+                        <input type="text" id="prodNombre" class="form-control" placeholder="Ej. Labial de larga duración">
+                        <div id="errProdNombre" class="form-text text-muted d-none">Debe tener mínimo 5 caracteres, iniciar con Mayúscula y el resto en minúsculas.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Categoría</label>
+                        <select id="prodCategoria" class="form-select">
+                            <option value="">-- Selecciona --</option>
+                            <option value="Labios">Labios</option>
+                            <option value="Rostro">Rostro</option>
+                            <option value="Ojos">Ojos</option>
+                            <option value="Accesorios">Accesorios</option>
+                        </select>
+                        <div id="errProdCategoria" class="form-text text-muted d-none">Debe seleccionar una categoría para el producto.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Descripción</label>
+                        <textarea id="prodDescripcion" class="form-control" rows="3" placeholder="Ej. Acabado mate impecable"></textarea>
+                        <div id="errProdDescripcion" class="form-text text-muted d-none">Debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 10 caracteres.</div>
+                    </div>
+                    <button type="submit" class="btn btn-rosa w-100">Registrar Producto</button>
+                </form>
             </div>
-            <div id="listaFavoritos" class="row"></div>
-        </div>
-    </div>
-</section>
-
-<section id="contacto" class="m-3">
-    <h2 class="text-center mb-4">Contacto</h2>
-    <div class="row">
-        <div class="col-md-6">
-            <form id="formContacto" novalidate>
-                <div id="mensajeContacto" class="alert d-none" role="alert"></div>
-                <div class="mb-3">
-                    <label class="form-label">Nombre</label>
-                    <input type="text" id="contNombre" class="form-control">
-                    <div id="errContNombre" class="form-text text-muted">El nombre debe iniciar con Mayúscula y el resto en minúsculas.</div>
+            <div class="col-md-7">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5>Inventario de Productos</h5>
+                    <span class="badge bg-purple p-2 fs-6" id="contadorProductos">Total productos: 0</span>
                 </div>
-                <div class="mb-3">
-                    <label class="form-label">Correo Electrónico</label>
-                    <input type="email" id="contEmail" class="form-control">
-                    <div id="errContEmail" class="form-text text-muted">Debe ingresar un formato de correo válido (ejemplo@correo.com).</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Asunto</label>
-                    <input type="text" id="contAsunto" class="form-control">
-                    <div id="errContAsunto" class="form-text text-muted">El asunto debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 12 caracteres.</div>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Mensaje</label>
-                    <textarea id="contMensaje" class="form-control" rows="5"></textarea>
-                    <div id="errContMensaje" class="form-text text-muted">El mensaje debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 25 caracteres.</div>
-                </div>
-                <button type="submit" class="btn btn-success">Enviar Mensaje</button>
-            </form>
-        </div>
-        <div class="col-md-6">
-            <p><strong>Correo:</strong> erminiagaleas18@gmail.com</p>
-            <p><strong>Teléfono:</strong> 0969877293</p>
-            <p><strong>Dirección:</strong> Guaranda - Bolívar - Ecuador</p>
-            <div class="mt-4">
-                <a href="mailto:erminiagaleas18@gmail.com" class="btn btn-danger m-1">Correo</a>
-                <a href="https://www.facebook.com/erminia.galeas.5" target="_blank" class="btn btn-primary m-1">Facebook</a>
-                <a href="https://www.instagram.com/erminia.galeas?igsh=MzQ3ZTl6cDkzanJs" target="_blank" class="btn btn-info m-1 text-white">Instagram</a>
-                <a href="https://www.tiktok.com/@erminiag755?_r=1&_t=ZS-97lnbIZCIYz" target="_blank" class="btn btn-dark m-1">TikTok</a>
+                <div id="listaFavoritos" class="row"></div>
             </div>
         </div>
-    </div>
-    <h3 class="text-center mt-5">Video</h3>
-    <div class="text-center">
-        <iframe width="560" height="315" src="https://www.youtube.com/embed/xkAdMeggJe4" title="Video de maquillaje" frameborder="0" allowfullscreen></iframe>
-    </div>
-</section>
+    </section>
 
-<h5 class="text-center m-4">Ámate, valórate y nunca olvides que tu mejor versión empieza contigo misma.</h5>
+    <section id="contacto" class="m-3 seccion-contacto">
+        <h2 class="text-center mb-4">Contacto</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <form id="formContacto" novalidate>
+                    <div id="mensajeContacto" class="alert d-none" role="alert"></div>
+                    <div class="mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" id="contNombre" class="form-control">
+                        <div id="errContNombre" class="form-text text-muted d-none">El nombre debe iniciar con Mayúscula y el resto en minúsculas.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Correo Electrónico</label>
+                        <input type="email" id="contEmail" class="form-control">
+                        <div id="errContEmail" class="form-text text-muted d-none">Debe ingresar un formato de correo válido (ejemplo@correo.com).</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Asunto</label>
+                        <input type="text" id="contAsunto" class="form-control">
+                        <div id="errContAsunto" class="form-text text-muted d-none">El asunto debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 12 caracteres.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mensaje</label>
+                        <textarea id="contMensaje" class="form-control" rows="5"></textarea>
+                        <div id="errContMensaje" class="form-text text-muted d-none">El mensaje debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 25 caracteres.</div>
+                    </div>
+                    <button type="submit" class="btn btn-success">Enviar Mensaje</button>
+                </form>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Correo:</strong> erminiagaleas18@gmail.com</p>
+                <p><strong>Teléfono:</strong> 0969877293</p>
+                <p><strong>Dirección:</strong> Guaranda - Bolívar - Ecuador</p>
+                <div class="mt-4">
+                    <a href="mailto:erminiagaleas18@gmail.com" class="btn btn-danger m-1">Correo</a>
+                    <a href="https://www.facebook.com/erminia.galeas.5" target="_blank" class="btn btn-primary m-1">Facebook</a>
+                    <a href="https://www.instagram.com/erminia.galeas?igsh=MzQ3ZTl6cDkzanJs" target="_blank" class="btn btn-info m-1 text-white">Instagram</a>
+                    <a href="https://www.tiktok.com/@erminiag755?_r=1&_t=ZS-97lnbIZCIYz" target="_blank" class="btn btn-dark m-1">TikTok</a>
+                </div>
+            </div>
+        </div>
+        <h3 class="text-center mt-5">Video</h3>
+        <div class="text-center">
+            <iframe width="560" height="315" src="https://www.youtube.com/embed/xkAdMeggJe4" title="Video de maquillaje" frameborder="0" allowfullscreen></iframe>
+        </div>
+    </section>
 
-<aside class="p-4 m-3">
-    <h3>Promociones</h3>
-    <p>Contamos con dos tipos de promociones:</p>
-    <ul>
-        <li>Todos los miércoles 12% de descuento en todos los productos de maquillaje.</li>
-        <li>En días festivos 20% de descuento en productos seleccionados.</li>
-    </ul>
-    <h3>Horario de Atención</h3>
-    <p>9:00 AM a 8:00 PM de martes a sábado.</p>
-    <h3>Información Importante</h3>
-    <ul>
-        <li>Cuando llega nueva mercadería o un producto se agota, informamos a nuestras clientas mediante nuestros canales de comunicación.</li>
-        <li>Por cada compra de 6 productos entregamos un obsequio especial.</li>
-    </ul>
-</aside>
+    <h5 class="text-center m-4">Ámate, valórate y nunca olvides que tu mejor versión empieza contigo misma.</h5>
 
+    <aside class="p-4 m-3 seccion-promos">
+        <h3>Promociones</h3>
+        <p>Contamos con los siguientes tipos de promociones:</p>
+        <ul id="listaPromociones"></ul>
+        <h3>Horario de Atención</h3>
+        <p>9:00 AM a 8:00 PM de martes a sábado.</p>
+        <h3>Información Importante</h3>
+        <ul>
+            <li>Cuando llega nueva mercadería o un producto se agota, informamos a nuestras clientas mediante nuestros canales de comunicación.</li>
+            <li>Por cada compra de 6 productos entregamos un obsequio especial.</li>
+        </ul>
+    </aside>
+
+</main>
+<!-- ================================================================== -->
+<!-- FIN CONTENIDO DINÁMICO ({% endblock %})                             -->
+<!-- ================================================================== -->
+
+
+<!-- ================================================================== -->
+<!-- INICIO PLANTILLA BASE: pie_pagina.html -> {% include "pie_pagina.html" %} -->
+<!-- ================================================================== -->
 <footer class="text-center p-3 mt-4">
     <p><strong>Estudiante:</strong> Erminia Natividad Galeas Rodríguez</p>
     <p><strong>Asignatura:</strong> Desarrollo de Aplicaciones Web</p>
     <p><strong>Año:</strong> 2026</p>
 </footer>
+<!-- FIN: pie_pagina.html -->
 
-</main>
+<button id="btnSubir" class="btn-subir" title="Subir arriba">&uarr;</button>
+
+<div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
+    <div id="toastGeneral" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body" id="toastMensaje">Mensaje</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+        </div>
+    </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="script.js"></script>
