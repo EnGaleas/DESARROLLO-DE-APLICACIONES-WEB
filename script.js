@@ -125,22 +125,10 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     }
 
-    function limpiarValidacionInput(input, textoAyuda, mensajeOriginal) {
-        input.classList.remove("is-invalid", "is-valid");
-        textoAyuda.textContent = mensajeOriginal;
-        textoAyuda.className = "form-text text-muted";
-    }
-
     function mostrarPista(textoAyuda, mensajeOriginal) {
         textoAyuda.classList.remove("d-none");
         if (textoAyuda.textContent.trim() === "") {
             textoAyuda.textContent = mensajeOriginal;
-        }
-    }
-
-    function ocultarPistaSiVacio(input, textoAyuda) {
-        if (input.value.trim() === "") {
-            textoAyuda.classList.add("d-none");
         }
     }
 
@@ -164,12 +152,11 @@ document.addEventListener("DOMContentLoaded", function () {
             col.className = "col-md-4 col-sm-6 mb-4";
             col.innerHTML = `
                 <div class="card-catalogo fade-in-card" style="animation-delay:${index * 0.05}s">
+                    <h5>${producto.nombre}</h5>
+                    <p class="mt-2">${producto.descripcion}</p>
                     <span class="badge-estado ${producto.disponible ? "badge-disponible" : "badge-agotado"}">
                         ${producto.disponible ? "Disponible" : "Agotado"}
                     </span>
-                    <h5>${producto.nombre}</h5>
-                    <span class="badge-categoria">${producto.categoria}</span>
-                    <p class="mt-2">${producto.descripcion}</p>
                 </div>
             `;
             catalogoContenedor.appendChild(col);
@@ -263,7 +250,7 @@ document.addEventListener("DOMContentLoaded", function () {
         el.addEventListener("input", () => validarCampo(el, errEl, c.texto, c.min, c.nombre));
         el.addEventListener("blur", () => {
             validarCampo(el, errEl, c.texto, c.min, c.nombre);
-            ocultarPistaSiVacio(el, errEl);
+            errEl.classList.add("d-none");
         });
     });
 
@@ -273,9 +260,7 @@ document.addEventListener("DOMContentLoaded", function () {
     prodCategoria.addEventListener("change", validarCategoria);
     prodCategoria.addEventListener("blur", () => {
         validarCategoria();
-        if (prodCategoria.value === "") {
-            errProdCategoria.classList.add("d-none");
-        }
+        errProdCategoria.classList.add("d-none");
     });
 
     const contEmail = document.getElementById("contEmail");
@@ -284,7 +269,7 @@ document.addEventListener("DOMContentLoaded", function () {
     contEmail.addEventListener("input", validarEmail);
     contEmail.addEventListener("blur", () => {
         validarEmail();
-        ocultarPistaSiVacio(contEmail, errContEmail);
+        errContEmail.classList.add("d-none");
     });
 
     formProducto.addEventListener("submit", function (event) {
