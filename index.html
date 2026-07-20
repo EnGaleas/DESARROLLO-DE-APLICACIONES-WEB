@@ -14,6 +14,15 @@
 <body>
 
 <!-- ================================================================== -->
+<!-- NUEVO SEMANA 8: Spinner global para simulación de carga asíncrona  -->
+<!-- ================================================================== -->
+<div id="contenedorSpinner" class="d-none position-fixed top-50 start-50 translate-middle" style="z-index: 2000;">
+    <div class="spinner-border text-danger" style="width: 3rem; height: 3rem;" role="status">
+        <span class="visually-hidden">Procesando...</span>
+    </div>
+</div>
+
+<!-- ================================================================== -->
 <!-- INICIO PLANTILLA BASE (futuro base.html en Flask)                   -->
 <!-- Esta parte se repite en todas las páginas del sitio, por eso        -->
 <!-- se convertirá en un archivo independiente reutilizable (base.html)  -->
@@ -48,7 +57,7 @@
     <!-- FIN: menu.html -->
 
 <!-- ================================================================== -->
-<!-- FIN PLANTILLA BASE                                                  -->
+<!-- FIN PLANTILLA BASE                                                 -->
 <!-- ================================================================== -->
 
 
@@ -146,7 +155,7 @@
                     <div class="mb-3">
                         <label class="form-label fw-bold">Nombre del Producto</label>
                         <input type="text" id="prodNombre" class="form-control" placeholder="Ej. Labial de larga duración">
-                        <div id="errProdNombre" class="form-text text-muted d-none">Debe tener mínimo 5 caracteres, iniciar con Mayúscula y el resto en minúsculas.</div>
+                        <div id="errProdNombre" class="form-text text-muted d-none">Debe tener mínimo 4 caracteres, iniciar con Mayúscula y el resto en minúsculas.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label fw-bold">Categoría</label>
@@ -196,12 +205,12 @@
                     <div class="mb-3">
                         <label class="form-label">Asunto</label>
                         <input type="text" id="contAsunto" class="form-control">
-                        <div id="errContAsunto" class="form-text text-muted d-none">El asunto debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 12 caracteres.</div>
+                        <div id="errContAsunto" class="form-text text-muted d-none">El asunto debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 8 caracteres.</div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Mensaje</label>
                         <textarea id="contMensaje" class="form-control" rows="5"></textarea>
-                        <div id="errContMensaje" class="form-text text-muted d-none">El mensaje debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 25 caracteres.</div>
+                        <div id="errContMensaje" class="form-text text-muted d-none">El mensaje debe iniciar con Mayúscula, el resto en minúsculas y tener mínimo 15 caracteres.</div>
                     </div>
                     <button type="submit" class="btn btn-success">Enviar Mensaje</button>
                 </form>
@@ -256,6 +265,27 @@
 <!-- FIN: pie_pagina.html -->
 
 <button id="btnSubir" class="btn-subir" title="Subir arriba">&uarr;</button>
+
+<!-- ================================================================== -->
+<!-- NUEVO SEMANA 8: Modal de Confirmación de Eliminación Requerido       -->
+<!-- ================================================================== -->
+<div class="modal fade" id="modalEliminar" tabindex="-1" aria-labelledby="modalEliminarLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content style-modal" style="border-radius: 20px;">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger" id="modalEliminarLabel">Confirmación de Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center py-4">
+                <p class="fs-5 m-0">¿Está seguro de que desea eliminar permanentemente este producto del inventario?</p>
+            </div>
+            <div class="modal-footer border-0 justify-content-center">
+                <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" id="btnConfirmarEliminar" class="btn btn-danger px-4">Eliminar Producto</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080">
     <div id="toastGeneral" class="toast align-items-center text-white border-0" role="alert" aria-live="assertive" aria-atomic="true">
