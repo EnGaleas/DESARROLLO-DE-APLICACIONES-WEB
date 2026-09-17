@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Inicio - Brilla Hermosa Mujer{% endblock %}
+
+{% block content %}
+<section id="inicio" class="hero text-center p-5 m-3 seccion-inicio">
+    <h2>Inicio</h2>
+    <p class="text-justify-custom">
+        Bienvenida a Brilla Hermosa Mujer, un espacio creado para inspirarte,
+        acompañarte y ayudarte a resaltar tu belleza natural a través del maquillaje.
+        Aquí encontrarás productos pensados para realzar tu estilo, tu personalidad
+        y tu confianza.
+    </p>
+</section>
+
+<section id="quienes" class="m-3 seccion-quienes">
+    <article>
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h2 class="mb-3">¿Quiénes Somos?</h2>
+                    <p class="text-justify-custom">
+                        Brilla Hermosa Mujer es un emprendimiento dedicado al mundo del maquillaje y la belleza femenina,
+                        creado con el propósito de ayudar a cada mujer a resaltar su belleza natural, fortalecer su autoestima
+                        y expresar su personalidad a través del arte del maquillaje.
+                    </p>
+                    <p class="text-justify-custom">
+                        Creemos firmemente que cada persona es única y merece sentirse segura, auténtica y valiosa en cada momento
+                        de su vida, por ello ofrecemos productos de alta calidad, modernos y accesibles.
+                    </p>
+                </div>
+                <div class="col-md-6 text-center">
+                    <img src="{{ url_for('static', filename='img/Maquillaje.png') }}" class="img-fluid" alt="Productos de maquillaje">
+                </div>
+            </div>
+        </div>
+    </article>
+</section>
+{% endblock %}

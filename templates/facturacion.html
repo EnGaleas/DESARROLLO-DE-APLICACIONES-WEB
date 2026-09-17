@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Facturación - Brilla Hermosa Mujer{% endblock %}
+
+{% block content %}
+<section class="p-4 bg-white rounded shadow-sm">
+    <h2 class="text-center mb-4">Registro de Facturación</h2>
+    <table class="table table-bordered table-hover text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>N° Factura</th>
+                <th>Cliente</th>
+                <th>Fecha</th>
+                <th>Método de Pago</th>
+                <th>Total</th>
+                <th>Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>FAC-001</td>
+                <td>María López</td>
+                <td>2026-09-16</td>
+                <td>Efectivo</td>
+                <td>$12.50</td>
+                <td><span class="badge bg-success">Completado</span></td>
+            </tr>
+            <tr>
+                <td>FAC-002</td>
+                <td>Ana Torres</td>
+                <td>2026-09-16</td>
+                <td>Transferencia</td>
+                <td>$24.00</td>
+                <td><span class="badge bg-success">Completado</span></td>
+            </tr>
+            <tr>
+                <td>FAC-003</td>
+                <td>Carla Mendoza</td>
+                <td>2026-09-15</td>
+                <td>Tarjeta de Débito</td>
+                <td>$18.50</td>
+                <td><span class="badge bg-success">Completado</span></td>
+            </tr>
+            <tr>
+                <td>FAC-004</td>
+                <td>Diana Gómez</td>
+                <td>2026-09-14</td>
+                <td>Transferencia</td>
+                <td>$35.00</td>
+                <td><span class="badge bg-warning text-dark">Pendiente</span></td>
+            </tr>
+            <tr>
+                <td>FAC-005</td>
+                <td>Sofia Paredes</td>
+                <td>2026-09-12</td>
+                <td>Efectivo</td>
+                <td>$9.50</td>
+                <td><span class="badge bg-success">Completado</span></td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+{% endblock %}

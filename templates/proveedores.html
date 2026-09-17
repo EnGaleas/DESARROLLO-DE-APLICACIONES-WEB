@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block title %}Proveedores - Brilla Hermosa Mujer{% endblock %}
+
+{% block content %}
+<section class="p-4 bg-white rounded shadow-sm">
+    <h2 class="text-center mb-4">Lista de Proveedores</h2>
+    <table class="table table-striped table-bordered text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>Empresa</th>
+                <th>Contacto (Email)</th>
+                <th>Teléfono</th>
+                <th>Categoría de Suministros</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>Cosméticos Distribuidora S.A.</td>
+                <td>contacto@cosmeticos.com</td>
+                <td>022345678</td>
+                <td>Maquillaje de Rostro y Labios</td>
+            </tr>
+            <tr>
+                <td>Beauty Import Ecuador</td>
+                <td>ventas@beautyimport.ec</td>
+                <td>042889900</td>
+                <td>Brochas y Accesorios</td>
+            </tr>
+            <tr>
+                <td>Glow & Care Cosmetics</td>
+                <td>info@glowcare.com</td>
+                <td>0994455667</td>
+                <td>Bases, Primers y Correctores</td>
+            </tr>
+            <tr>
+                <td>Distribuidora Belleza Total</td>
+                <td>pedidos@bellezatotal.ec</td>
+                <td>032964112</td>
+                <td>Paletas de Sombras y Delineadores</td>
+            </tr>
+            <tr>
+                <td>Elegance Skincare Ltd.</td>
+                <td>contacto@eleganceskin.com</td>
+                <td>0981122334</td>
+                <td>Bálsamos y Cuidado Facial</td>
+            </tr>
+        </tbody>
+    </table>
+</section>
+{% endblock %}
