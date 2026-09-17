@@ -1,6 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request, redirect, url_for, flash
+from forms.producto_form import ProductoForm
+from forms.cliente_form import ClienteForm
+from forms.proveedor_form import ProveedorForm
+from forms.facturacion_form import FacturacionForm
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'clave_secreta_semana_11_desarrollo_web'
 
 PRODUCTOS = [
     # --- LABIOS ---
@@ -47,7 +52,7 @@ CLIENTES = [
 PROVEEDORES = [
     {"id": 1, "empresa": "Distribuidora Belleza S.A.", "contacto": "Carlos Ruiz", "telefono": "022345678", "ciudad": "Quito"},
     {"id": 2, "empresa": "Cosméticos del Ecuador", "contacto": "Laura Paez", "telefono": "042889900", "ciudad": "Guayaquil"},
-    {"id": 3, "empresa": "Importadora Glamour", "contacto": "Sofia Viteri", "telefono": "072112233", "ciudad": "Cuenca"}
+    {"id": 3, "empresa": "Importadora Glamour", "contacto": "Sofía Viteri", "telefono": "072112233", "ciudad": "Cuenca"}
 ]
 
 FACTURAS = [
@@ -61,21 +66,124 @@ def inicio():
     titulo_bienvenida = "Bienvenidos a Brilla Hermosa Mujer"
     return render_template('index.html', titulo=titulo_bienvenida)
 
+# --- MÓDULO PRODUCTOS ---
 @app.route('/productos')
 def productos():
-    return render_template('productos.html', productos=PRODUCTOS)
+    cat_seleccionada = request.args.get('categoria', 'Todos')
+    if cat_seleccionada != 'Todos':
+        productos_filtrados = [p for p in PRODUCTOS if p['categoria'] == cat_seleccionada]
+    else:
+        productos_filtrados = PRODUCTOS
+    return render_template('productos.html', productos=productos_filtrados, cat_seleccionada=cat_seleccionada)
 
+@app.route('/productos/nuevo', methods=['GET', 'POST'])
+def formulario_producto():
+    form = ProductoForm()
+    if form.validate_on_submit():
+        nuevo_p = {
+            "id": len(PRODUCTOS) + 1,
+            "nombre": form.nombre.data,
+            "precio": form.precio.data,
+            "stock": form.stock.data,
+            "categoria": form.categoria.data,
+            "descripcion": form.descripcion.data,
+            "imagen": "img/Maquillaje.png"
+        }
+        PRODUCTOS.append(nuevo_p)
+        flash('Producto guardado correctamente.', 'success')
+        return redirect(url_for('productos'))
+    return render_template('formulario_producto.html', form=form)
+
+@app.route('/productos/eliminar/<int:producto_id>', methods=['POST'])
+def eliminar_producto(producto_id):
+    global PRODUCTOS
+    PRODUCTOS = [p for p in PRODUCTOS if p['id'] != producto_id]
+    flash('Producto eliminado correctamente.', 'warning')
+    return redirect(url_for('productos'))
+
+# --- MÓDULO CLIENTES ---
 @app.route('/clientes')
 def clientes():
     return render_template('clientes.html', clientes=CLIENTES)
 
+@app.route('/clientes/nuevo', methods=['GET', 'POST'])
+def formulario_cliente():
+    form = ClienteForm()
+    if form.validate_on_submit():
+        nuevo_c = {
+            "id": len(CLIENTES) + 1,
+            "nombre": form.nombre.data,
+            "email": form.email.data,
+            "telefono": form.telefono.data,
+            "estado": form.estado.data
+        }
+        CLIENTES.append(nuevo_c)
+        flash('Cliente guardado correctamente.', 'success')
+        return redirect(url_for('clientes'))
+    return render_template('formulario_cliente.html', form=form)
+
+@app.route('/clientes/eliminar/<int:cliente_id>', methods=['POST'])
+def eliminar_cliente(cliente_id):
+    global CLIENTES
+    CLIENTES = [c for c in CLIENTES if c['id'] != cliente_id]
+    flash('Cliente eliminado correctamente.', 'warning')
+    return redirect(url_for('clientes'))
+
+# --- MÓDULO PROVEEDORES ---
 @app.route('/proveedores')
 def proveedores():
     return render_template('proveedores.html', proveedores=PROVEEDORES)
 
+@app.route('/proveedores/nuevo', methods=['GET', 'POST'])
+def formulario_proveedor():
+    form = ProveedorForm()
+    if form.validate_on_submit():
+        nuevo_pr = {
+            "id": len(PROVEEDORES) + 1,
+            "empresa": form.empresa.data,
+            "contacto": form.contacto.data,
+            "telefono": form.telefono.data,
+            "ciudad": form.ciudad.data
+        }
+        PROVEEDORES.append(nuevo_pr)
+        flash('Proveedor guardado correctamente.', 'success')
+        return redirect(url_for('proveedores'))
+    return render_template('formulario_proveedor.html', form=form)
+
+@app.route('/proveedores/eliminar/<int:proveedor_id>', methods=['POST'])
+def eliminar_proveedor(proveedor_id):
+    global PROVEEDORES
+    PROVEEDORES = [pr for pr in PROVEEDORES if pr['id'] != proveedor_id]
+    flash('Proveedor eliminado correctamente.', 'warning')
+    return redirect(url_for('proveedores'))
+
+# --- MÓDULO FACTURACIÓN ---
 @app.route('/facturacion')
 def facturacion():
     return render_template('facturacion.html', facturas=FACTURAS)
+
+@app.route('/facturacion/nuevo', methods=['GET', 'POST'])
+def formulario_facturacion():
+    form = FacturacionForm()
+    if form.validate_on_submit():
+        nueva_f = {
+            "numero": form.numero.data,
+            "cliente": form.cliente.data,
+            "fecha": str(form.fecha.data),
+            "total": form.total.data,
+            "estado": form.estado.data
+        }
+        FACTURAS.append(nueva_f)
+        flash('Factura guardada correctamente.', 'success')
+        return redirect(url_for('facturacion'))
+    return render_template('formulario_facturacion.html', form=form)
+
+@app.route('/facturacion/eliminar/<string:numero>', methods=['POST'])
+def eliminar_factura(numero):
+    global FACTURAS
+    FACTURAS = [f for f in FACTURAS if f['numero'] != numero]
+    flash('Factura eliminada correctamente.', 'warning')
+    return redirect(url_for('facturacion'))
 
 if __name__ == '__main__':
     app.run(debug=True)

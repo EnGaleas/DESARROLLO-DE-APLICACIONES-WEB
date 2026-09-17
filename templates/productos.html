@@ -3,28 +3,65 @@
 {% block title %}Productos - Brilla Hermosa Mujer{% endblock %}
 
 {% block content %}
-<section class="p-4 bg-white rounded shadow-sm">
-    <h2 class="text-center mb-4 fw-bold text-dark">Catálogo de Productos</h2>
-    
+<section class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">Catálogo de productos</h2>
+        <a href="{{ url_for('formulario_producto') }}" class="btn btn-primary fw-bold">+ Nuevo producto</a>
+    </div>
+
+    <div class="mb-4 d-flex flex-wrap gap-2 justify-content-center">
+        <a href="{{ url_for('productos', categoria='Todos') }}" 
+           class="btn {{ 'btn-dark' if cat_seleccionada == 'Todos' else 'btn-outline-dark' }}">
+            Todos
+        </a>
+        <a href="{{ url_for('productos', categoria='Labios') }}" 
+           class="btn {{ 'btn-dark' if cat_seleccionada == 'Labios' else 'btn-outline-dark' }}">
+            💄 Labios
+        </a>
+        <a href="{{ url_for('productos', categoria='Ojos y Cejas') }}" 
+           class="btn {{ 'btn-dark' if cat_seleccionada == 'Ojos y Cejas' else 'btn-outline-dark' }}">
+            👁️ Ojos y cejas
+        </a>
+        <a href="{{ url_for('productos', categoria='Rostro') }}" 
+           class="btn {{ 'btn-dark' if cat_seleccionada == 'Rostro' else 'btn-outline-dark' }}">
+            ✨ Rostro
+        </a>
+        <a href="{{ url_for('productos', categoria='Accesorios') }}" 
+           class="btn {{ 'btn-dark' if cat_seleccionada == 'Accesorios' else 'btn-outline-dark' }}">
+            👜 Accesorios
+        </a>
+    </div>
+
     <div class="row row-cols-1 row-cols-md-3 g-4">
         {% for producto in productos %}
         <div class="col">
-            <div class="card h-100 shadow-sm border-0 text-center p-3">
-                <div class="card-body d-flex flex-column justify-content-between">
-                    <div>
-                        <h5 class="card-title fw-bold text-uppercase text-dark mb-3">{{ producto.nombre }}</h5>
-                        <p class="card-text text-muted small mb-3">{{ producto.descripcion }}</p>
-                    </div>
-                    <div>
-                        <h4 class="text-primary fw-bold mb-3">${{ "%.2f"|format(producto.precio) }}</h4>
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-body d-flex flex-column text-center">
+                    <span class="badge bg-secondary mb-2 align-self-center">{{ producto.categoria }}</span>
+                    <h5 class="card-title fw-bold text-dark">{{ producto.nombre }}</h5>
+                    <p class="card-text text-muted small">{{ producto.descripcion }}</p>
+                    <div class="mt-auto">
+                        <p class="fs-4 fw-bold text-primary mb-1">${{ "%.2f"|format(producto.precio) }}</p>
                         {% if producto.stock > 0 %}
-                            <span class="badge bg-success py-2 px-3">Disponible ({{ producto.stock }} un.)</span>
+                            <span class="badge bg-success mb-3">Disponible ({{ producto.stock }} un.)</span>
                         {% else %}
-                            <span class="badge bg-danger py-2 px-3">Agotado</span>
+                            <span class="badge bg-danger mb-3">Agotado</span>
                         {% endif %}
+                        
+                        <div class="pt-2 border-top">
+                            <form action="{{ url_for('eliminar_producto', producto_id=loop.index0) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold w-100" onclick="return confirm('¿Desea eliminar este producto?')">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <p class="text-muted fs-5">No hay productos registrados en esta categoría.</p>
         </div>
         {% endfor %}
     </div>
