@@ -20,7 +20,7 @@
                             <th>Contacto</th>
                             <th>Teléfono</th>
                             <th>Ciudad</th>
-                            <th class="text-center">Acción</th>
+                            <th class="text-center" style="width: 180px;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -32,11 +32,16 @@
                             <td>{{ proveedor.telefono }}</td>
                             <td>{{ proveedor.ciudad }}</td>
                             <td class="text-center">
-                                <form action="{{ url_for('eliminar_proveedor', proveedor_id=proveedor.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea eliminar este proveedor?')">
-                                        Eliminar
-                                    </button>
-                                </form>
+                                <div class="d-inline-flex gap-1 align-items-center text-nowrap">
+                                    <a href="{{ url_for('editar_proveedor', proveedor_id=proveedor.id) }}" class="btn btn-sm btn-outline-warning fw-bold">
+                                        Editar
+                                    </a>
+                                    <form action="{{ url_for('eliminar_proveedor', proveedor_id=proveedor.id) }}" method="POST" class="d-inline mb-0">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea eliminar este proveedor?')">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% else %}

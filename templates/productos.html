@@ -39,18 +39,20 @@
                     <th>ID</th>
                     <th>Producto</th>
                     <th>Categoría</th>
+                    <th>Proveedor</th>
                     <th>Precio</th>
                     <th>Stock</th>
                     <th>Descripción</th>
-                    <th class="text-center">Acciones</th>
+                    <th class="text-center" style="width: 160px;">Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 {% for producto in productos %}
                 <tr>
-                    <td>{{ producto['id'] }}</td>
+                    <td>{{ producto['id_producto'] }}</td>
                     <td class="fw-bold">{{ producto['nombre'] }}</td>
                     <td><span class="badge bg-secondary">{{ producto['categoria'] }}</span></td>
+                    <td><span class="badge bg-info text-dark">{{ producto['proveedor_nombre'] if producto['proveedor_nombre'] else 'Sin Asignar' }}</span></td>
                     <td class="text-primary fw-bold">${{ "%.2f"|format(producto['precio']) }}</td>
                     <td>
                         {% if producto['stock'] > 0 %}
@@ -61,16 +63,21 @@
                     </td>
                     <td class="small text-muted">{{ producto['descripcion'] }}</td>
                     <td class="text-center">
-                        <form action="{{ url_for('eliminar_producto', producto_id=producto['id']) }}" method="POST" style="display:inline;">
-                            <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea eliminar este producto?')">
-                                Eliminar
-                            </button>
-                        </form>
+                        <div class="d-inline-flex gap-1 align-items-center text-nowrap">
+                            <a href="{{ url_for('editar_producto', id_producto=producto['id_producto']) }}" class="btn btn-sm btn-outline-warning fw-bold">
+                                Editar
+                            </a>
+                            <form action="{{ url_for('eliminar_producto', id_producto=producto['id_producto']) }}" method="POST" class="d-inline mb-0">
+                                <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea eliminar este producto?')">
+                                    Eliminar
+                                </button>
+                            </form>
+                        </div>
                     </td>
                 </tr>
                 {% else %}
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">No hay productos registrados en esta categoría.</td>
+                    <td colspan="8" class="text-center py-4 text-muted">No hay productos registrados en esta categoría.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -20,7 +20,7 @@
                             <th>Correo Electrónico</th>
                             <th>Teléfono</th>
                             <th>Estado</th>
-                            <th class="text-center">Acción</th>
+                            <th class="text-center" style="width: 180px;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,11 +38,16 @@
                                 {% endif %}
                             </td>
                             <td class="text-center">
-                                <form action="{{ url_for('eliminar_cliente', cliente_id=cliente.id) }}" method="POST" class="d-inline">
-                                    <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea Eliminar Este Registro?')">
-                                        Eliminar
-                                    </button>
-                                </form>
+                                <div class="d-inline-flex gap-1 align-items-center text-nowrap">
+                                    <a href="{{ url_for('editar_cliente', cliente_id=cliente.id) }}" class="btn btn-sm btn-outline-warning fw-bold">
+                                        Editar
+                                    </a>
+                                    <form action="{{ url_for('eliminar_cliente', cliente_id=cliente.id) }}" method="POST" class="d-inline mb-0">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea Eliminar Este Registro?')">
+                                            Eliminar
+                                        </button>
+                                    </form>
+                                </div>
                             </td>
                         </tr>
                         {% else %}

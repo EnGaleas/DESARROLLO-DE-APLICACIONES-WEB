@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, IntegerField, SelectField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired, Length, NumberRange
+from wtforms.validators import DataRequired, Length, NumberRange, InputRequired
 
 class ProductoForm(FlaskForm):
     nombre = StringField('Nombre del producto', validators=[
@@ -9,12 +9,12 @@ class ProductoForm(FlaskForm):
     ], render_kw={"placeholder": "Ej. Labial Matte Cream"})
 
     precio = FloatField('Precio ($)', validators=[
-        DataRequired(message="El campo es obligatorio."),
+        InputRequired(message="El campo es obligatorio."),
         NumberRange(min=0.01, message="El precio ingresado es incorrecto, debe ser mayor a 0.")
     ], render_kw={"placeholder": "Ej. 6.50"})
 
     stock = IntegerField('Cantidad en stock', validators=[
-        DataRequired(message="El campo es obligatorio."),
+        InputRequired(message="El campo es obligatorio."),
         NumberRange(min=0, message="El valor ingresado es incorrecto, no puede ser negativo.")
     ], render_kw={"placeholder": "Ej. 12"})
 
@@ -25,6 +25,10 @@ class ProductoForm(FlaskForm):
         ('Accesorios', 'Accesorios'),
         ('Cuidado Facial', 'Cuidado Facial')
     ], validators=[DataRequired(message="Seleccione una opción válida.")])
+
+    id_proveedor = SelectField('Proveedor', coerce=int, choices=[], validators=[
+        InputRequired(message="Seleccione un proveedor.")
+    ])
 
     descripcion = TextAreaField('Descripción', validators=[
         DataRequired(message="El campo es obligatorio."),
