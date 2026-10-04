@@ -879,8 +879,7 @@ def eliminar_factura(numero):
     return redirect(url_for('facturacion'))
 
 
+inicializar_base_datos()
+
 if __name__ == '__main__':
-    print(">>> Conectando e inicializando la base de datos PostgreSQL...")
-    inicializar_base_datos()
-    print(">>> Iniciando servidor Flask...")
     app.run(debug=True)
