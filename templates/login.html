@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow border-0 rounded-4 p-4">
+                <h2 class="text-center fw-bold mb-4">Iniciar Sesión</h2>
+
+                <form method="POST" action="{{ url_for('login') }}">
+                    {{ form.hidden_tag() }}
+
+                    <div class="mb-3">
+                        {{ form.usuario.label(class="form-label fw-semibold") }}
+                        {{ form.usuario(class="form-control", placeholder="Ingresa tu usuario") }}
+                        {% for error in form.usuario.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.password.label(class="form-label fw-semibold") }}
+                        {{ form.password(class="form-control", placeholder="Ingresa tu contraseña") }}
+                        {% for error in form.password.errors %}
+                            <small class="text-danger">{{ error }}</small>
+                        {% endfor %}
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        {{ form.submit(class="btn btn-primary btn-lg fw-bold") }}
+                    </div>
+                </form>
+
+                <hr class="my-4">
+                <p class="text-center mb-0">
+                    ¿No tienes una cuenta? <a href="{{ url_for('registro') }}" class="text-decoration-none fw-bold">Regístrate aquí</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

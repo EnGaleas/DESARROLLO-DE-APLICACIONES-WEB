@@ -9,9 +9,13 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('inicio') }}">Inicio</a>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{{ url_for('dashboard') }}">Dashboard</a>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('productos') }}">Productos</a>
@@ -25,6 +29,27 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{{ url_for('facturacion') }}">Facturación</a>
                     </li>
+                    {% endif %}
+                </ul>
+
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    {% if current_user.is_authenticated %}
+                    <li class="nav-item me-3">
+                        <span class="navbar-text text-light">
+                            Hola, <strong>{{ current_user.usuario }}</strong>
+                        </span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-outline-danger btn-sm" href="{{ url_for('logout') }}">Cerrar Sesión</a>
+                    </li>
+                    {% else %}
+                    <li class="nav-item me-2">
+                        <a class="btn btn-outline-light btn-sm" href="{{ url_for('login') }}">Iniciar Sesión</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="btn btn-primary btn-sm" href="{{ url_for('registro') }}">Registrarse</a>
+                    </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>

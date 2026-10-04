@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Brilla Hermosa Mujer{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="p-5 mb-4 bg-light rounded-3 shadow-sm">
+        <div class="container-fluid py-3">
+            <h1 class="display-5 fw-bold">¡Bienvenido, {{ current_user.usuario }}!</h1>
+            <p class="col-md-8 fs-4">Has iniciado sesión correctamente en el sistema de gestión.</p>
+            <hr class="my-4">
+            <div class="d-flex flex-wrap gap-2">
+                <a href="{{ url_for('productos') }}" class="btn btn-primary btn-lg">Gestionar Productos ({{ metrics.total_productos }})</a>
+                <a href="{{ url_for('clientes') }}" class="btn btn-secondary btn-lg">Gestionar Clientes ({{ metrics.total_clientes }})</a>
+                <a href="{{ url_for('proveedores') }}" class="btn btn-success btn-lg">Gestionar Proveedores ({{ metrics.total_proveedores }})</a>
+                <a href="{{ url_for('facturacion') }}" class="btn btn-dark btn-lg">Gestionar Facturación ({{ metrics.total_facturas }})</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

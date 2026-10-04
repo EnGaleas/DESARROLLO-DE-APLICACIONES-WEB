@@ -1,6 +1,16 @@
 CREATE DATABASE IF NOT EXISTS maquillaje_db;
 USE maquillaje_db;
 
+-- Tabla: usuarios (Sistema de Login - Semana 14)
+-- Las contraseñas se guardan con hash (generate_password_hash), nunca en texto plano.
+CREATE TABLE IF NOT EXISTS usuarios (
+    id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+    usuario VARCHAR(50) NOT NULL UNIQUE,
+    email VARCHAR(100) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS proveedores (
     id_proveedor INT AUTO_INCREMENT PRIMARY KEY,
     empresa VARCHAR(100) NOT NULL,

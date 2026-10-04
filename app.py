@@ -1,20 +1,70 @@
 import os
 from flask import Flask, render_template, request, redirect, url_for, flash
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash
+
 from conexion.conexion import obtener_conexion
+from models import Usuario
 from forms.producto_form import ProductoForm
 from forms.cliente_form import ClienteForm
 from forms.proveedor_form import ProveedorForm
 from forms.facturacion_form import FacturacionForm
+from forms.login_form import LoginForm
+from forms.usuario_form import RegistroForm
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'clave_secreta_semana_13_desarrollo_web'
 
+# --- CONFIGURACIÓN DE FLASK-LOGIN ---
+login_manager = LoginManager(app)
+login_manager.login_view = 'login'
+login_manager.login_message = 'Por favor inicia sesión para acceder a esta sección.'
+login_manager.login_message_category = 'warning'
+
+@login_manager.user_loader
+def load_user(user_id):
+    conn = obtener_conexion()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT id_usuario, usuario, email FROM usuarios WHERE id_usuario = %s', (user_id,))
+    res = cursor.fetchone()
+    cursor.close()
+    conn.close()
+    if res:
+        return Usuario(res['id_usuario'], res['usuario'], res['email'])
+    return None
+
+
+# --- INICIALIZACIÓN DE LA BASE DE DATOS ---
+
 def inicializar_base_datos():
-    """Puebla datos iniciales en MySQL si las tablas están vacías."""
+    """Crea la tabla usuarios si no existe y puebla datos iniciales en MySQL si las tablas están vacías."""
     conn = None
     try:
         conn = obtener_conexion()
         cursor = conn.cursor(dictionary=True)
+        
+        # 0. Crear tabla usuarios si no existe
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS usuarios (
+                id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+                usuario VARCHAR(50) NOT NULL UNIQUE,
+                email VARCHAR(100) NOT NULL UNIQUE,
+                password VARCHAR(255) NOT NULL,
+                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+        conn.commit()
+
+        # Usuario inicial por defecto
+        cursor.execute('SELECT COUNT(*) AS total FROM usuarios')
+        res_usr = cursor.fetchone()
+        if res_usr and res_usr['total'] == 0:
+            pass_hash = generate_password_hash('admin123')
+            cursor.execute('''
+                INSERT INTO usuarios (usuario, email, password)
+                VALUES (%s, %s, %s)
+            ''', ('admin', 'admin@brilla.com', pass_hash))
+            conn.commit()
         
         # 1. Proveedores iniciales
         cursor.execute('SELECT COUNT(*) AS total FROM proveedores')
@@ -29,7 +79,6 @@ def inicializar_base_datos():
             ''', proveedores_iniciales)
             conn.commit()
 
-        # Obtener el ID del primer proveedor para asociarlo a los productos
         cursor.execute('SELECT id_proveedor FROM proveedores LIMIT 1')
         prov_default = cursor.fetchone()
         id_prov = prov_default['id_proveedor'] if prov_default else None
@@ -115,15 +164,117 @@ def inicializar_base_datos():
         if conn and conn.is_connected():
             conn.close()
 
+
+# --- RUTAS DE AUTENTICACIÓN ---
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+
+    form = LoginForm()
+    if form.validate_on_submit():
+        conn = obtener_conexion()
+        cursor = conn.cursor(dictionary=True)
+        cursor.execute('SELECT * FROM usuarios WHERE usuario = %s', (form.usuario.data,))
+        usr = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if usr and check_password_hash(usr['password'], form.password.data):
+            user_obj = Usuario(usr['id_usuario'], usr['usuario'], usr['email'])
+            login_user(user_obj)
+            flash(f'¡Bienvenido/a, {usr["usuario"]}!', 'success')
+            next_page = request.args.get('next')
+            return redirect(next_page or url_for('dashboard'))
+        else:
+            flash('Usuario o contraseña incorrectos.', 'danger')
+
+    return render_template('login.html', form=form)
+
+
+@app.route('/registro', methods=['GET', 'POST'])
+def registro():
+    if current_user.is_authenticated:
+        return redirect(url_for('dashboard'))
+
+    form = RegistroForm()
+    if form.validate_on_submit():
+        conn = obtener_conexion()
+        cursor = conn.cursor(dictionary=True)
+        
+        cursor.execute('SELECT id_usuario FROM usuarios WHERE usuario = %s OR email = %s', 
+                       (form.usuario.data, form.email.data))
+        existente = cursor.fetchone()
+
+        if existente:
+            flash('El nombre de usuario o correo ya está registrado.', 'warning')
+            cursor.close()
+            conn.close()
+        else:
+            pass_hash = generate_password_hash(form.password.data)
+            cursor.execute('''
+                INSERT INTO usuarios (usuario, email, password)
+                VALUES (%s, %s, %s)
+            ''', (form.usuario.data, form.email.data, pass_hash))
+            conn.commit()
+            cursor.close()
+            conn.close()
+            flash('Cuenta creada con éxito. ¡Ya puedes iniciar sesión!', 'success')
+            return redirect(url_for('login'))
+
+    return render_template('registro.html', form=form)
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('Has cerrado sesión correctamente.', 'info')
+    return redirect(url_for('inicio'))
+
+
+@app.route('/dashboard')
+@login_required
+def dashboard():
+    conn = obtener_conexion()
+    cursor = conn.cursor(dictionary=True)
+    
+    cursor.execute('SELECT COUNT(*) AS total FROM productos')
+    tot_prod = cursor.fetchone()['total']
+
+    cursor.execute('SELECT COUNT(*) AS total FROM clientes')
+    tot_cli = cursor.fetchone()['total']
+
+    cursor.execute('SELECT COUNT(*) AS total FROM proveedores')
+    tot_prov = cursor.fetchone()['total']
+
+    cursor.execute('SELECT COUNT(*) AS total FROM facturas')
+    tot_fac = cursor.fetchone()['total']
+
+    cursor.close()
+    conn.close()
+
+    metrics = {
+        'total_productos': tot_prod,
+        'total_clientes': tot_cli,
+        'total_proveedores': tot_prov,
+        'total_facturas': tot_fac
+    }
+    return render_template('dashboard.html', metrics=metrics)
+    
+
 # --- RUTAS DE LA APLICACIÓN ---
 
 @app.route('/')
 def inicio():
     return render_template('index.html', titulo="Bienvenidos a Brilla Hermosa Mujer")
 
+
 # --- MÓDULO PRODUCTOS ---
 
 @app.route('/productos')
+@login_required
 def productos():
     cat_seleccionada = request.args.get('categoria', 'Todos')
     conn = obtener_conexion()
@@ -147,7 +298,9 @@ def productos():
     
     return render_template('productos.html', productos=productos_db, cat_seleccionada=cat_seleccionada)
 
+
 @app.route('/productos/nuevo', methods=['GET', 'POST'])
+@login_required
 def formulario_producto():
     form = ProductoForm()
     
@@ -182,7 +335,9 @@ def formulario_producto():
     conn.close()
     return render_template('formulario_producto.html', form=form)
 
+
 @app.route('/productos/editar/<int:id_producto>', methods=['GET', 'POST'])
+@login_required
 def editar_producto(id_producto):
     conn = obtener_conexion()
     cursor = conn.cursor(dictionary=True)
@@ -232,7 +387,9 @@ def editar_producto(id_producto):
     conn.close()
     return render_template('formulario_producto.html', form=form, producto=producto)
 
+
 @app.route('/productos/eliminar/<int:id_producto>', methods=['POST'])
+@login_required
 def eliminar_producto(id_producto):
     conn = obtener_conexion()
     cursor = conn.cursor()
@@ -244,9 +401,11 @@ def eliminar_producto(id_producto):
     flash('Producto eliminado correctamente.', 'warning')
     return redirect(url_for('productos'))
 
+
 # --- MÓDULO CLIENTES ---
 
 @app.route('/clientes')
+@login_required
 def clientes():
     conn = obtener_conexion()
     cursor = conn.cursor(dictionary=True)
@@ -256,7 +415,9 @@ def clientes():
     conn.close()
     return render_template('clientes.html', clientes=clientes_db)
 
+
 @app.route('/clientes/nuevo', methods=['GET', 'POST'])
+@login_required
 def formulario_cliente():
     form = ClienteForm()
     if form.validate_on_submit():
@@ -273,8 +434,9 @@ def formulario_cliente():
         return redirect(url_for('clientes'))
     return render_template('formulario_cliente.html', form=form)
 
-# NUEVA RUTA: Editar Cliente (Agregada para cumplir con la guía)
+
 @app.route('/clientes/editar/<int:cliente_id>', methods=['GET', 'POST'])
+@login_required
 def editar_cliente(cliente_id):
     conn = obtener_conexion()
     cursor = conn.cursor(dictionary=True)
@@ -306,7 +468,9 @@ def editar_cliente(cliente_id):
     conn.close()
     return render_template('formulario_cliente.html', form=form, cliente=cliente)
 
+
 @app.route('/clientes/eliminar/<int:cliente_id>', methods=['POST'])
+@login_required
 def eliminar_cliente(cliente_id):
     conn = obtener_conexion()
     cursor = conn.cursor()
@@ -317,9 +481,11 @@ def eliminar_cliente(cliente_id):
     flash('Cliente eliminado correctamente.', 'warning')
     return redirect(url_for('clientes'))
 
+
 # --- MÓDULO PROVEEDORES ---
 
 @app.route('/proveedores')
+@login_required
 def proveedores():
     conn = obtener_conexion()
     cursor = conn.cursor(dictionary=True)
@@ -329,7 +495,9 @@ def proveedores():
     conn.close()
     return render_template('proveedores.html', proveedores=proveedores_db)
 
+
 @app.route('/proveedores/nuevo', methods=['GET', 'POST'])
+@login_required
 def formulario_proveedor():
     form = ProveedorForm()
     if form.validate_on_submit():
@@ -346,8 +514,9 @@ def formulario_proveedor():
         return redirect(url_for('proveedores'))
     return render_template('formulario_proveedor.html', form=form)
 
-# NUEVA RUTA: Editar Proveedor (Agregada para cumplir con la guía)
+
 @app.route('/proveedores/editar/<int:proveedor_id>', methods=['GET', 'POST'])
+@login_required
 def editar_proveedor(proveedor_id):
     conn = obtener_conexion()
     cursor = conn.cursor(dictionary=True)
@@ -379,7 +548,9 @@ def editar_proveedor(proveedor_id):
     conn.close()
     return render_template('formulario_proveedor.html', form=form, proveedor=proveedor)
 
+
 @app.route('/proveedores/eliminar/<int:proveedor_id>', methods=['POST'])
+@login_required
 def eliminar_proveedor(proveedor_id):
     conn = obtener_conexion()
     cursor = conn.cursor()
@@ -390,9 +561,11 @@ def eliminar_proveedor(proveedor_id):
     flash('Proveedor eliminado correctamente.', 'warning')
     return redirect(url_for('proveedores'))
 
+
 # --- MÓDULO FACTURACIÓN ---
 
 @app.route('/facturacion')
+@login_required
 def facturacion():
     conn = obtener_conexion()
     cursor = conn.cursor(dictionary=True)
@@ -406,7 +579,9 @@ def facturacion():
     conn.close()
     return render_template('facturacion.html', facturas=facturas_db)
 
+
 @app.route('/facturacion/nuevo', methods=['GET', 'POST'])
+@login_required
 def formulario_facturacion():
     form = FacturacionForm()
     if form.validate_on_submit():
@@ -438,7 +613,9 @@ def formulario_facturacion():
         return redirect(url_for('facturacion'))
     return render_template('formulario_facturacion.html', form=form)
 
+
 @app.route('/facturacion/eliminar/<string:numero>', methods=['POST'])
+@login_required
 def eliminar_factura(numero):
     conn = obtener_conexion()
     cursor = conn.cursor()
@@ -448,6 +625,7 @@ def eliminar_factura(numero):
     conn.close()
     flash('Factura eliminada correctamente.', 'warning')
     return redirect(url_for('facturacion'))
+
 
 if __name__ == '__main__':
     print(">>> Conectando e inicializando la base de datos MySQL...")
