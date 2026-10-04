@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, FloatField, SelectField, SubmitField
-from wtforms.validators import DataRequired, NumberRange
+from wtforms.validators import DataRequired, NumberRange, Optional
 
 class FacturacionForm(FlaskForm):
     numero = StringField('Número De Factura', validators=[
@@ -16,9 +16,9 @@ class FacturacionForm(FlaskForm):
     ], render_kw={"placeholder": "Ej. 2026-09-17"})
 
     total = FloatField('Total ($)', validators=[
-        DataRequired(message="El Total Es Obligatorio."),
+        Optional(),
         NumberRange(min=0.01, message="El Total Debe Ser Mayor A 0.")
-    ], render_kw={"placeholder": "Ej. 25.50"})
+    ])
 
     estado = SelectField('Estado De Pago', choices=[
         ('Pagado', 'Pagado'),

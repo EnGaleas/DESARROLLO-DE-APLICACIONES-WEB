@@ -5,59 +5,120 @@
 {% block content %}
 <div class="container my-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
+        <div class="{% if factura %}col-md-8 col-lg-6{% else %}col-lg-11{% endif %}">
             <div class="card shadow border-0 rounded-4">
                 <div class="card-header bg-primary text-white p-3 rounded-top-4">
                     <h4 class="mb-0 fw-bold">{% if factura %}Editar{% else %}Registro De{% endif %} Factura</h4>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" action="" novalidate>
+                    <form method="POST" action="" id="form-factura" novalidate>
                         {{ form.hidden_tag() }}
 
-                        <div class="mb-3">
-                            {{ form.numero.label(class="form-label fw-bold") }}
-                            {{ form.numero(class="form-control " + ("is-invalid" if form.numero.errors else "")) }}
-                            <div class="form-text text-muted">Formato Requerido: FAC-001.</div>
-                            {% for error in form.numero.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                {{ form.numero.label(class="form-label fw-bold") }}
+                                {{ form.numero(class="form-control " + ("is-invalid" if form.numero.errors else "")) }}
+                                <div class="form-text text-muted">Formato Requerido: FAC-001.</div>
+                                {% for error in form.numero.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.cliente.label(class="form-label fw-bold") }}
+                                {{ form.cliente(class="form-control " + ("is-invalid" if form.cliente.errors else "")) }}
+                                <div class="form-text text-muted">Escriba Nombre Y Apellido Del Cliente.</div>
+                                {% for error in form.cliente.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.fecha.label(class="form-label fw-bold") }}
+                                {{ form.fecha(class="form-control " + ("is-invalid" if form.fecha.errors else ""), type="date") }}
+                                <div class="form-text text-muted">Seleccione Año-Mes-Día En El Calendario.</div>
+                                {% for error in form.fecha.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                {{ form.estado.label(class="form-label fw-bold") }}
+                                {{ form.estado(class="form-select " + ("is-invalid" if form.estado.errors else "")) }}
+                                <div class="form-text text-muted">Seleccione El Estado De Cobro.</div>
+                                {% for error in form.estado.errors %}
+                                    <div class="invalid-feedback d-block">{{ error }}</div>
+                                {% endfor %}
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            {{ form.cliente.label(class="form-label fw-bold") }}
-                            {{ form.cliente(class="form-control " + ("is-invalid" if form.cliente.errors else "")) }}
-                            <div class="form-text text-muted">Escriba Nombre Y Apellido Del Cliente.</div>
-                            {% for error in form.cliente.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="mb-3">
-                            {{ form.fecha.label(class="form-label fw-bold") }}
-                            {{ form.fecha(class="form-control " + ("is-invalid" if form.fecha.errors else ""), type="date") }}
-                            <div class="form-text text-muted">Seleccione Año-Mes-Día En El Calendario.</div>
-                            {% for error in form.fecha.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-
-                        <div class="mb-3">
+                        {% if factura %}
+                        <div class="mb-4">
                             {{ form.total.label(class="form-label fw-bold") }}
-                            {{ form.total(class="form-control " + ("is-invalid" if form.total.errors else "")) }}
-                            <div class="form-text text-muted">Ingrese El Valor Con Punto Decimal (Ej. 25.50).</div>
+                            {{ form.total(class="form-control", readonly=True) }}
+                            <div class="form-text text-muted">El total se calcula con los productos de la factura y no se modifica aquí.</div>
                             {% for error in form.total.errors %}
                                 <div class="invalid-feedback d-block">{{ error }}</div>
                             {% endfor %}
                         </div>
+                        {% else %}
+                        <hr>
+                        <h5 class="fw-bold mb-3">Productos de la factura</h5>
 
-                        <div class="mb-4">
-                            {{ form.estado.label(class="form-label fw-bold") }}
-                            {{ form.estado(class="form-select " + ("is-invalid" if form.estado.errors else "")) }}
-                            <div class="form-text text-muted">Seleccione El Estado De Cobro.</div>
-                            {% for error in form.estado.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle text-center mb-2">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="text-start">Producto</th>
+                                        <th>Categoría</th>
+                                        <th>Precio</th>
+                                        <th>Stock</th>
+                                        <th>Cantidad</th>
+                                        <th>Subtotal</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="filas"></tbody>
+                            </table>
                         </div>
+
+                        <div id="aviso-stock" class="alert alert-danger py-2 d-none"></div>
+
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <button type="button" id="btn-agregar" class="btn btn-outline-primary fw-bold">+ Agregar producto</button>
+                            <div class="fs-5 fw-bold">Total: <span id="total-calc" class="text-success">$0.00</span></div>
+                        </div>
+
+                        <template id="fila-tpl">
+                            <tr>
+                                <td style="min-width: 230px;">
+                                    <select name="id_producto[]" class="form-select form-select-sm sel-producto">
+                                        <option value="">-- Seleccione --</option>
+                                        {% for p in productos %}
+                                        <option value="{{ p.id_producto }}"
+                                                data-categoria="{{ p.categoria }}"
+                                                data-precio="{{ '%.2f'|format(p.precio) }}"
+                                                data-stock="{{ p.stock }}"
+                                                {% if p.stock == 0 %}disabled{% endif %}>
+                                            {{ p.nombre }}{% if p.stock == 0 %} (Agotado){% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </td>
+                                <td class="celda-cat">-</td>
+                                <td class="celda-precio">-</td>
+                                <td class="celda-stock small">-</td>
+                                <td style="width: 110px;">
+                                    <input type="number" name="cantidad[]" min="1" value="1"
+                                           class="form-control form-control-sm inp-cantidad">
+                                </td>
+                                <td class="celda-subtotal fw-bold">$0.00</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-quitar">✕</button>
+                                </td>
+                            </tr>
+                        </template>
+                        {% endif %}
 
                         <div class="d-flex gap-2">
                             {{ form.submit(class="btn btn-primary w-100 fw-bold") }}
@@ -69,4 +130,114 @@
         </div>
     </div>
 </div>
+
+{% if not factura %}
+<script>
+(function () {
+    const tbody = document.getElementById('filas');
+    const tpl = document.getElementById('fila-tpl');
+    const aviso = document.getElementById('aviso-stock');
+    const totalEl = document.getElementById('total-calc');
+    const formEl = document.getElementById('form-factura');
+
+    const idsPrev = {{ request.form.getlist('id_producto[]')|tojson }};
+    const cantPrev = {{ request.form.getlist('cantidad[]')|tojson }};
+
+    function money(n) { return '$' + n.toFixed(2); }
+
+    function actualizarFila(tr) {
+        const sel = tr.querySelector('.sel-producto');
+        const opt = sel.selectedOptions[0];
+        const cant = parseInt(tr.querySelector('.inp-cantidad').value, 10) || 0;
+        const celdaStock = tr.querySelector('.celda-stock');
+        tr.dataset.excede = '0';
+
+        if (!sel.value) {
+            tr.querySelector('.celda-cat').textContent = '-';
+            tr.querySelector('.celda-precio').textContent = '-';
+            celdaStock.textContent = '-';
+            tr.querySelector('.celda-subtotal').textContent = money(0);
+            tr.dataset.subtotal = '0';
+            tr.dataset.nombre = '';
+            return;
+        }
+
+        const precio = parseFloat(opt.dataset.precio);
+        const stock = parseInt(opt.dataset.stock, 10);
+        tr.dataset.nombre = opt.textContent.trim();
+        tr.dataset.stock = stock;
+
+        tr.querySelector('.celda-cat').textContent = opt.dataset.categoria;
+        tr.querySelector('.celda-precio').textContent = money(precio);
+
+        if (cant > stock) {
+            tr.dataset.excede = '1';
+            celdaStock.innerHTML = '<span class="text-danger fw-bold">Solo quedan ' + stock + '</span>';
+        } else {
+            celdaStock.innerHTML = 'Disponible: <b>' + stock + '</b><br>Quedarán: <b>' + (stock - cant) + '</b>';
+        }
+
+        const subtotal = precio * cant;
+        tr.dataset.subtotal = subtotal;
+        tr.querySelector('.celda-subtotal').textContent = money(subtotal);
+    }
+
+    function recalcular() {
+        let total = 0;
+        const mensajes = [];
+        tbody.querySelectorAll('tr').forEach(function (tr) {
+            total += parseFloat(tr.dataset.subtotal || '0');
+            if (tr.dataset.excede === '1') {
+                const cant = tr.querySelector('.inp-cantidad').value;
+                mensajes.push('Stock insuficiente de "' + tr.dataset.nombre + '": pediste ' + cant +
+                              ' y solo quedan ' + tr.dataset.stock + '.');
+            }
+        });
+        totalEl.textContent = money(total);
+        if (mensajes.length) {
+            aviso.innerHTML = mensajes.join('<br>');
+            aviso.classList.remove('d-none');
+        } else {
+            aviso.classList.add('d-none');
+        }
+    }
+
+    function agregarFila(idProd, cantidad) {
+        const tr = tpl.content.firstElementChild.cloneNode(true);
+        tbody.appendChild(tr);
+        const sel = tr.querySelector('.sel-producto');
+        const inp = tr.querySelector('.inp-cantidad');
+        if (idProd) sel.value = idProd;
+        if (cantidad) inp.value = cantidad;
+
+        sel.addEventListener('change', function () { actualizarFila(tr); recalcular(); });
+        inp.addEventListener('input', function () { actualizarFila(tr); recalcular(); });
+        tr.querySelector('.btn-quitar').addEventListener('click', function () {
+            if (tbody.querySelectorAll('tr').length > 1) {
+                tr.remove();
+                recalcular();
+            }
+        });
+        actualizarFila(tr);
+        recalcular();
+    }
+
+    document.getElementById('btn-agregar').addEventListener('click', function () { agregarFila(); });
+
+    if (idsPrev.length) {
+        idsPrev.forEach(function (id, i) { agregarFila(id, cantPrev[i]); });
+    } else {
+        agregarFila();
+    }
+
+    formEl.addEventListener('submit', function (e) {
+        recalcular();
+        if (!aviso.classList.contains('d-none')) {
+            e.preventDefault();
+            aviso.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+    });
+})();
+</script>
+{% endif %}
 {% endblock %}

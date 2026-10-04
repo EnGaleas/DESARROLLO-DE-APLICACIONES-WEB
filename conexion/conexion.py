@@ -12,7 +12,7 @@ def obtener_conexion():
             conexion = psycopg2.connect(
                 host=os.environ.get("DB_HOST", "localhost"),
                 user=os.environ.get("DB_USER", "postgres"),
-               password=os.environ.get("DB_PASSWORD", ""),
+                password=os.environ.get("DB_PASSWORD", ""),
                 dbname=os.environ.get("DB_NAME", "maquillaje_db"),
                 port=os.environ.get("DB_PORT", "5432"),
             )

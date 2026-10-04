@@ -18,9 +18,10 @@
                             <th>N° Factura</th>
                             <th>Cliente</th>
                             <th>Fecha</th>
+                            <th>Productos</th>
                             <th>Total</th>
                             <th>Estado</th>
-                            <th class="text-center" style="width: 180px;">Acción</th>
+                            <th class="text-center" style="width: 260px;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -29,6 +30,7 @@
                             <td class="fw-bold">{{ factura.numero }}</td>
                             <td>{{ factura.cliente }}</td>
                             <td>{{ factura.fecha }}</td>
+                            <td class="text-start small">{{ factura.productos }}</td>
                             <td>${{ "%.2f"|format(factura.total) }}</td>
                             <td>
                                 {% if factura.estado == 'Pagado' %}
@@ -39,6 +41,9 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-inline-flex gap-1 align-items-center text-nowrap">
+                                    <a href="{{ url_for('detalle_factura', numero=factura.numero) }}" class="btn btn-sm btn-outline-primary fw-bold">
+                                        Ver detalle
+                                    </a>
                                     <a href="{{ url_for('editar_factura', numero=factura.numero) }}" class="btn btn-sm btn-outline-warning fw-bold">
                                         Editar
                                     </a>
@@ -52,7 +57,7 @@
                         </tr>
                         {% else %}
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">No Hay Facturas Registradas.</td>
+                            <td colspan="7" class="text-center py-4 text-muted">No Hay Facturas Registradas.</td>
                         </tr>
                         {% endfor %}
                     </tbody>

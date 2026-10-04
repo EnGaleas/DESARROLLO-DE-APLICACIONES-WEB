@@ -97,6 +97,18 @@ def inicializar_base_datos():
                 FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS detalle_factura (
+                id_detalle SERIAL PRIMARY KEY,
+                id_factura INT NOT NULL,
+                id_producto INT NOT NULL,
+                cantidad INT NOT NULL,
+                precio_unitario DECIMAL(10,2) NOT NULL,
+                subtotal DECIMAL(10,2) NOT NULL,
+                FOREIGN KEY (id_factura) REFERENCES facturas(id_factura) ON DELETE CASCADE,
+                FOREIGN KEY (id_producto) REFERENCES productos(id_producto)
+            )
+        ''')
         conn.commit()
 
         cursor.execute('SELECT COUNT(*) AS total FROM usuarios')
@@ -195,6 +207,39 @@ def inicializar_base_datos():
                     VALUES (%s, %s, %s, %s, %s)
                 ''', facturas_iniciales)
                 conn.commit()
+
+        # --- DETALLE DE LAS FACTURAS DE EJEMPLO ---
+        cursor.execute('SELECT COUNT(*) AS total FROM detalle_factura')
+        res_det = cursor.fetchone()
+        if res_det and res_det['total'] == 0:
+            # (número de factura, [(nombre del producto, cantidad), ...])
+            detalles_iniciales = [
+                ("FAC-001", [("Labial Matte Cream", 1), ("Rímel Máximo Volumen Waterproof", 1)]),                       # 12.50
+                ("FAC-002", [("Kit de Brochas Profesionales (10 pzas)", 1), ("Organizador Acrílico de Cosméticos", 1)]),  # 25.00
+                ("FAC-003", [("Primer Facial Suavizante de Poros", 1), ("Paleta de Sombras Nude Pro", 1)]),              # 18.00
+                ("FAC-004", [("Kit de Brochas Profesionales (10 pzas)", 1), ("Organizador Acrílico de Cosméticos", 1),
+                             ("Esponja Blender de Maquillaje", 1), ("Rizador de Pestañas Ergonómico", 1)]),             # 30.50
+                ("FAC-005", [("Labial Matte Cream", 1), ("Delineador en Gel Negro Intenso", 1),
+                             ("Gel Fijador Transparente de Cejas", 1)])                                                  # 15.00
+            ]
+            for numero, items in detalles_iniciales:
+                cursor.execute('SELECT id_factura FROM facturas WHERE numero = %s LIMIT 1', (numero,))
+                fac = cursor.fetchone()
+                if not fac:
+                    continue
+                for nombre_prod, cant in items:
+                    cursor.execute('SELECT id_producto, precio FROM productos WHERE nombre = %s LIMIT 1',
+                                   (nombre_prod,))
+                    prod = cursor.fetchone()
+                    if not prod:
+                        continue
+                    subtotal = float(prod['precio']) * cant
+                    cursor.execute('''
+                        INSERT INTO detalle_factura
+                        (id_factura, id_producto, cantidad, precio_unitario, subtotal)
+                        VALUES (%s, %s, %s, %s, %s)
+                    ''', (fac['id_factura'], prod['id_producto'], cant, prod['precio'], subtotal))
+            conn.commit()
 
         cursor.close()
     except Exception as e:
@@ -310,14 +355,14 @@ def dashboard():
         'total_facturas': tot_fac
     }
     return render_template('dashboard.html', metrics=metrics)
-    
+
 
 # --- RUTAS DE LA APLICACIÓN ---
 
 @app.route('/')
 def inicio():
     return render_template('index.html', titulo="Bienvenidos a Brilla Hermosa Mujer")
-
+    
 
 # --- MÓDULO PRODUCTOS ---
 
@@ -619,9 +664,14 @@ def facturacion():
     conn = obtener_conexion()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute('''
-        SELECT f.numero, c.nombre AS cliente, TO_CHAR(f.fecha, 'YYYY-MM-DD') AS fecha, f.total, f.estado
+        SELECT f.numero, c.nombre AS cliente, TO_CHAR(f.fecha, 'YYYY-MM-DD') AS fecha,
+               f.total, f.estado,
+               COALESCE(STRING_AGG(p.nombre || ' (x' || d.cantidad || ')', ', '), 'Sin productos') AS productos
         FROM facturas f
         LEFT JOIN clientes c ON f.id_cliente = c.id_cliente
+        LEFT JOIN detalle_factura d ON d.id_factura = f.id_factura
+        LEFT JOIN productos p ON d.id_producto = p.id_producto
+        GROUP BY f.id_factura, f.numero, c.nombre, f.fecha, f.total, f.estado
         ORDER BY f.id_factura
     ''')
     facturas_db = cursor.fetchall()
@@ -634,35 +684,127 @@ def facturacion():
 @login_required
 def formulario_facturacion():
     form = FacturacionForm()
+
+    conn = obtener_conexion()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('SELECT id_producto, nombre, categoria, precio, stock FROM productos ORDER BY nombre')
+    productos_db = cursor.fetchall()
+
     if form.validate_on_submit():
-        conn = obtener_conexion()
-        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        ids = request.form.getlist('id_producto[]')
+        cantidades = request.form.getlist('cantidad[]')
 
-        cursor.execute('SELECT id_cliente FROM clientes WHERE nombre = %s LIMIT 1', (form.cliente.data,))
-        cli = cursor.fetchone()
+        items = []
+        for i, c in zip(ids, cantidades):
+            if i and c and int(c) > 0:
+                items.append((int(i), int(c)))
 
-        if not cli:
-            cursor.execute('''
-                INSERT INTO clientes (nombre, email, telefono, estado)
-                VALUES (%s, %s, %s, %s)
-                RETURNING id_cliente
-            ''', (form.cliente.data, 'sin_email@dominio.com', '0000000000', 'Activo'))
-            id_cliente = cursor.fetchone()['id_cliente']
-            conn.commit()
+        if not items:
+            flash('Debes agregar al menos un producto.', 'danger')
         else:
-            id_cliente = cli['id_cliente']
+            try:
+                total = 0
+                detalles = []
+                error = None
 
-        cursor.execute('''
-            INSERT INTO facturas (numero, id_cliente, fecha, total, estado)
-            VALUES (%s, %s, %s, %s, %s)
-        ''', (form.numero.data, id_cliente, form.fecha.data, form.total.data, form.estado.data))
-        conn.commit()
+                for id_prod, cant in items:
+                    # FOR UPDATE bloquea la fila para evitar vender stock dos veces
+                    cursor.execute(
+                        'SELECT nombre, precio, stock FROM productos WHERE id_producto = %s FOR UPDATE',
+                        (id_prod,))
+                    p = cursor.fetchone()
+                    if not p:
+                        error = 'Un producto seleccionado no existe.'
+                        break
+                    if cant > p['stock']:
+                        error = (f'Stock insuficiente de "{p["nombre"]}": '
+                                 f'pediste {cant} y solo quedan {p["stock"]}.')
+                        break
+                    subtotal = float(p['precio']) * cant
+                    total += subtotal
+                    detalles.append((id_prod, cant, p['precio'], subtotal))
+
+                if error:
+                    conn.rollback()
+                    flash(error, 'danger')
+                else:
+                    # Cliente
+                    cursor.execute('SELECT id_cliente FROM clientes WHERE nombre = %s LIMIT 1',
+                                   (form.cliente.data,))
+                    cli = cursor.fetchone()
+                    if not cli:
+                        cursor.execute('''
+                            INSERT INTO clientes (nombre, email, telefono, estado)
+                            VALUES (%s, %s, %s, %s) RETURNING id_cliente
+                        ''', (form.cliente.data, 'sin_email@dominio.com', '0000000000', 'Activo'))
+                        id_cliente = cursor.fetchone()['id_cliente']
+                    else:
+                        id_cliente = cli['id_cliente']
+
+                    # Factura
+                    cursor.execute('''
+                        INSERT INTO facturas (numero, id_cliente, fecha, total, estado)
+                        VALUES (%s, %s, %s, %s, %s) RETURNING id_factura
+                    ''', (form.numero.data, id_cliente, form.fecha.data, total, form.estado.data))
+                    id_factura = cursor.fetchone()['id_factura']
+
+                    # Detalle + descontar stock
+                    for id_prod, cant, precio, subtotal in detalles:
+                        cursor.execute('''
+                            INSERT INTO detalle_factura
+                            (id_factura, id_producto, cantidad, precio_unitario, subtotal)
+                            VALUES (%s, %s, %s, %s, %s)
+                        ''', (id_factura, id_prod, cant, precio, subtotal))
+                        cursor.execute('UPDATE productos SET stock = stock - %s WHERE id_producto = %s',
+                                       (cant, id_prod))
+
+                    conn.commit()
+                    cursor.close()
+                    conn.close()
+                    flash('Factura guardada correctamente.', 'success')
+                    return redirect(url_for('detalle_factura', numero=form.numero.data))
+            except Exception as e:
+                conn.rollback()
+                flash(f'Error al guardar la factura: {e}', 'danger')
+
+    cursor.close()
+    conn.close()
+    return render_template('formulario_facturacion.html', form=form, productos=productos_db)
+
+
+@app.route('/facturacion/detalle/<string:numero>')
+@login_required
+def detalle_factura(numero):
+    conn = obtener_conexion()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    cursor.execute('''
+        SELECT f.id_factura, f.numero, c.nombre AS cliente,
+               TO_CHAR(f.fecha, 'YYYY-MM-DD') AS fecha, f.total, f.estado
+        FROM facturas f
+        LEFT JOIN clientes c ON f.id_cliente = c.id_cliente
+        WHERE f.numero = %s LIMIT 1
+    ''', (numero,))
+    factura = cursor.fetchone()
+
+    if not factura:
         cursor.close()
         conn.close()
-
-        flash('Factura guardada correctamente.', 'success')
+        flash('La factura solicitada no existe.', 'danger')
         return redirect(url_for('facturacion'))
-    return render_template('formulario_facturacion.html', form=form)
+
+    cursor.execute('''
+        SELECT p.nombre AS producto, p.categoria, d.precio_unitario,
+               d.cantidad, d.subtotal, p.stock AS stock_restante
+        FROM detalle_factura d
+        JOIN productos p ON d.id_producto = p.id_producto
+        WHERE d.id_factura = %s
+    ''', (factura['id_factura'],))
+    detalles = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+    return render_template('detalle_factura.html', factura=factura, detalles=detalles)
 
 
 @app.route('/facturacion/editar/<string:numero>', methods=['GET', 'POST'])
