@@ -20,7 +20,7 @@
                             <th>Fecha</th>
                             <th>Total</th>
                             <th>Estado</th>
-                            <th class="text-center" style="width: 160px;">Acción</th>
+                            <th class="text-center" style="width: 180px;">Acción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -39,6 +39,9 @@
                             </td>
                             <td class="text-center">
                                 <div class="d-inline-flex gap-1 align-items-center text-nowrap">
+                                    <a href="{{ url_for('editar_factura', numero=factura.numero) }}" class="btn btn-sm btn-outline-warning fw-bold">
+                                        Editar
+                                    </a>
                                     <form action="{{ url_for('eliminar_factura', numero=factura.numero) }}" method="POST" class="d-inline mb-0">
                                         <button type="submit" class="btn btn-sm btn-outline-danger fw-bold" onclick="return confirm('¿Desea Eliminar Esta Factura?')">
                                             Eliminar

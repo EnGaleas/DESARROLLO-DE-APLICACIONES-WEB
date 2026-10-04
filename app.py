@@ -1,4 +1,6 @@
 import os
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -13,7 +15,7 @@ from forms.login_form import LoginForm
 from forms.usuario_form import RegistroForm
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'clave_secreta_semana_13_desarrollo_web'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'clave_secreta_semana_15_desarrollo_web')
 
 # --- CONFIGURACIÓN DE FLASK-LOGIN ---
 login_manager = LoginManager(app)
@@ -21,10 +23,13 @@ login_manager.login_view = 'login'
 login_manager.login_message = 'Por favor inicia sesión para acceder a esta sección.'
 login_manager.login_message_category = 'warning'
 
+
 @login_manager.user_loader
 def load_user(user_id):
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
+    if conn is None:
+        return None
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute('SELECT id_usuario, usuario, email FROM usuarios WHERE id_usuario = %s', (user_id,))
     res = cursor.fetchone()
     cursor.close()
@@ -37,25 +42,63 @@ def load_user(user_id):
 # --- INICIALIZACIÓN DE LA BASE DE DATOS ---
 
 def inicializar_base_datos():
-    """Crea la tabla usuarios si no existe y puebla datos iniciales en MySQL si las tablas están vacías."""
     conn = None
     try:
         conn = obtener_conexion()
-        cursor = conn.cursor(dictionary=True)
-        
-        # 0. Crear tabla usuarios si no existe
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS usuarios (
-                id_usuario INT AUTO_INCREMENT PRIMARY KEY,
+                id_usuario SERIAL PRIMARY KEY,
                 usuario VARCHAR(50) NOT NULL UNIQUE,
                 email VARCHAR(100) NOT NULL UNIQUE,
                 password VARCHAR(255) NOT NULL,
                 fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS proveedores (
+                id_proveedor SERIAL PRIMARY KEY,
+                empresa VARCHAR(100) NOT NULL,
+                contacto VARCHAR(100) NOT NULL,
+                telefono VARCHAR(20) NOT NULL,
+                ciudad VARCHAR(50) NOT NULL
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS productos (
+                id_producto SERIAL PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                precio DECIMAL(10,2) NOT NULL,
+                stock INT NOT NULL,
+                categoria VARCHAR(50) NOT NULL,
+                descripcion TEXT,
+                id_proveedor INT,
+                FOREIGN KEY (id_proveedor) REFERENCES proveedores(id_proveedor) ON DELETE SET NULL
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS clientes (
+                id_cliente SERIAL PRIMARY KEY,
+                nombre VARCHAR(100) NOT NULL,
+                email VARCHAR(100) NOT NULL,
+                telefono VARCHAR(20) NOT NULL,
+                estado VARCHAR(20) NOT NULL
+            )
+        ''')
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS facturas (
+                id_factura SERIAL PRIMARY KEY,
+                numero VARCHAR(20) NOT NULL,
+                id_cliente INT,
+                fecha DATE NOT NULL,
+                total DECIMAL(10,2) NOT NULL,
+                estado VARCHAR(20) NOT NULL,
+                FOREIGN KEY (id_cliente) REFERENCES clientes(id_cliente) ON DELETE CASCADE
+            )
+        ''')
         conn.commit()
 
-        # Usuario inicial por defecto
         cursor.execute('SELECT COUNT(*) AS total FROM usuarios')
         res_usr = cursor.fetchone()
         if res_usr and res_usr['total'] == 0:
@@ -65,8 +108,7 @@ def inicializar_base_datos():
                 VALUES (%s, %s, %s)
             ''', ('admin', 'admin@brilla.com', pass_hash))
             conn.commit()
-        
-        # 1. Proveedores iniciales
+
         cursor.execute('SELECT COUNT(*) AS total FROM proveedores')
         res_prov = cursor.fetchone()
         if res_prov and res_prov['total'] == 0:
@@ -79,11 +121,10 @@ def inicializar_base_datos():
             ''', proveedores_iniciales)
             conn.commit()
 
-        cursor.execute('SELECT id_proveedor FROM proveedores LIMIT 1')
+        cursor.execute('SELECT id_proveedor FROM proveedores ORDER BY id_proveedor LIMIT 1')
         prov_default = cursor.fetchone()
         id_prov = prov_default['id_proveedor'] if prov_default else None
 
-        # 2. Productos iniciales
         cursor.execute('SELECT COUNT(*) AS total FROM productos')
         resultado = cursor.fetchone()
         if resultado and resultado['total'] == 0:
@@ -120,7 +161,6 @@ def inicializar_base_datos():
             ''', productos_iniciales)
             conn.commit()
 
-        # 3. Clientes iniciales
         cursor.execute('SELECT COUNT(*) AS total FROM clientes')
         res_cli = cursor.fetchone()
         if res_cli and res_cli['total'] == 0:
@@ -137,11 +177,10 @@ def inicializar_base_datos():
             ''', clientes_iniciales)
             conn.commit()
 
-        # 4. Facturas iniciales
         cursor.execute('SELECT COUNT(*) AS total FROM facturas')
         res_fac = cursor.fetchone()
         if res_fac and res_fac['total'] == 0:
-            cursor.execute('SELECT id_cliente FROM clientes LIMIT 5')
+            cursor.execute('SELECT id_cliente FROM clientes ORDER BY id_cliente LIMIT 5')
             cli_ids = cursor.fetchall()
             if cli_ids:
                 facturas_iniciales = [
@@ -160,8 +199,10 @@ def inicializar_base_datos():
         cursor.close()
     except Exception as e:
         print(f">>> ERROR AL INICIALIZAR BASE DE DATOS: {e}")
+        if conn is not None and conn.closed == 0:
+            conn.rollback()
     finally:
-        if conn and conn.is_connected():
+        if conn is not None and conn.closed == 0:
             conn.close()
 
 
@@ -175,7 +216,11 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         conn = obtener_conexion()
-        cursor = conn.cursor(dictionary=True)
+        if conn is None:
+            flash('No se pudo conectar a la base de datos.', 'danger')
+            return render_template('login.html', form=form)
+
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
         cursor.execute('SELECT * FROM usuarios WHERE usuario = %s', (form.usuario.data,))
         usr = cursor.fetchone()
         cursor.close()
@@ -201,9 +246,12 @@ def registro():
     form = RegistroForm()
     if form.validate_on_submit():
         conn = obtener_conexion()
-        cursor = conn.cursor(dictionary=True)
-        
-        cursor.execute('SELECT id_usuario FROM usuarios WHERE usuario = %s OR email = %s', 
+        if conn is None:
+            flash('No se pudo conectar a la base de datos.', 'danger')
+            return render_template('registro.html', form=form)
+
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+        cursor.execute('SELECT id_usuario FROM usuarios WHERE usuario = %s OR email = %s',
                        (form.usuario.data, form.email.data))
         existente = cursor.fetchone()
 
@@ -238,8 +286,8 @@ def logout():
 @login_required
 def dashboard():
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
-    
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
     cursor.execute('SELECT COUNT(*) AS total FROM productos')
     tot_prod = cursor.fetchone()['total']
 
@@ -278,24 +326,25 @@ def inicio():
 def productos():
     cat_seleccionada = request.args.get('categoria', 'Todos')
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
-    
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
     query = '''
-        SELECT p.*, pr.empresa AS proveedor_nombre 
-        FROM productos p 
+        SELECT p.*, pr.empresa AS proveedor_nombre
+        FROM productos p
         LEFT JOIN proveedores pr ON p.id_proveedor = pr.id_proveedor
     '''
-    
+
     if cat_seleccionada != 'Todos':
-        query += ' WHERE p.categoria = %s'
+        query += ' WHERE p.categoria = %s ORDER BY p.id_producto'
         cursor.execute(query, (cat_seleccionada,))
     else:
+        query += ' ORDER BY p.id_producto'
         cursor.execute(query)
-        
+
     productos_db = cursor.fetchall()
     cursor.close()
     conn.close()
-    
+
     return render_template('productos.html', productos=productos_db, cat_seleccionada=cat_seleccionada)
 
 
@@ -303,13 +352,13 @@ def productos():
 @login_required
 def formulario_producto():
     form = ProductoForm()
-    
+
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT id_proveedor, empresa FROM proveedores')
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('SELECT id_proveedor, empresa FROM proveedores ORDER BY id_proveedor')
     proveedores_db = cursor.fetchall()
     form.id_proveedor.choices = [(p['id_proveedor'], p['empresa']) for p in proveedores_db]
-    
+
     if form.validate_on_submit():
         cursor_insert = conn.cursor()
         cursor_insert.execute('''
@@ -327,10 +376,10 @@ def formulario_producto():
         cursor_insert.close()
         cursor.close()
         conn.close()
-        
+
         flash('Producto guardado correctamente.', 'success')
         return redirect(url_for('productos'))
-        
+
     cursor.close()
     conn.close()
     return render_template('formulario_producto.html', form=form)
@@ -340,30 +389,30 @@ def formulario_producto():
 @login_required
 def editar_producto(id_producto):
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
-    
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
     cursor.execute('SELECT * FROM productos WHERE id_producto = %s', (id_producto,))
     producto = cursor.fetchone()
-    
+
     if not producto:
         cursor.close()
         conn.close()
         flash('El producto solicitado no existe.', 'danger')
         return redirect(url_for('productos'))
-        
+
     form = ProductoForm(data=producto)
-    
-    cursor.execute('SELECT id_proveedor, empresa FROM proveedores')
+
+    cursor.execute('SELECT id_proveedor, empresa FROM proveedores ORDER BY id_proveedor')
     proveedores_db = cursor.fetchall()
     form.id_proveedor.choices = [(p['id_proveedor'], p['empresa']) for p in proveedores_db]
-    
+
     if request.method == 'GET':
         form.id_proveedor.data = producto.get('id_proveedor')
 
     if form.validate_on_submit():
         cursor_update = conn.cursor()
         cursor_update.execute('''
-            UPDATE productos 
+            UPDATE productos
             SET nombre = %s, precio = %s, stock = %s, categoria = %s, descripcion = %s, id_proveedor = %s
             WHERE id_producto = %s
         ''', (
@@ -379,10 +428,10 @@ def editar_producto(id_producto):
         cursor_update.close()
         cursor.close()
         conn.close()
-        
+
         flash('Producto actualizado correctamente.', 'success')
         return redirect(url_for('productos'))
-        
+
     cursor.close()
     conn.close()
     return render_template('formulario_producto.html', form=form, producto=producto)
@@ -397,7 +446,7 @@ def eliminar_producto(id_producto):
     conn.commit()
     cursor.close()
     conn.close()
-    
+
     flash('Producto eliminado correctamente.', 'warning')
     return redirect(url_for('productos'))
 
@@ -408,8 +457,8 @@ def eliminar_producto(id_producto):
 @login_required
 def clientes():
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT id_cliente AS id, nombre, email, telefono, estado FROM clientes')
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('SELECT id_cliente AS id, nombre, email, telefono, estado FROM clientes ORDER BY id_cliente')
     clientes_db = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -439,10 +488,10 @@ def formulario_cliente():
 @login_required
 def editar_cliente(cliente_id):
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute('SELECT * FROM clientes WHERE id_cliente = %s', (cliente_id,))
     cliente = cursor.fetchone()
-    
+
     if not cliente:
         cursor.close()
         conn.close()
@@ -453,7 +502,7 @@ def editar_cliente(cliente_id):
     if form.validate_on_submit():
         cursor_update = conn.cursor()
         cursor_update.execute('''
-            UPDATE clientes 
+            UPDATE clientes
             SET nombre = %s, email = %s, telefono = %s, estado = %s
             WHERE id_cliente = %s
         ''', (form.nombre.data, form.email.data, form.telefono.data, form.estado.data, cliente_id))
@@ -488,8 +537,8 @@ def eliminar_cliente(cliente_id):
 @login_required
 def proveedores():
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute('SELECT id_proveedor AS id, empresa, contacto, telefono, ciudad FROM proveedores')
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('SELECT id_proveedor AS id, empresa, contacto, telefono, ciudad FROM proveedores ORDER BY id_proveedor')
     proveedores_db = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -519,7 +568,7 @@ def formulario_proveedor():
 @login_required
 def editar_proveedor(proveedor_id):
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute('SELECT * FROM proveedores WHERE id_proveedor = %s', (proveedor_id,))
     proveedor = cursor.fetchone()
 
@@ -533,7 +582,7 @@ def editar_proveedor(proveedor_id):
     if form.validate_on_submit():
         cursor_update = conn.cursor()
         cursor_update.execute('''
-            UPDATE proveedores 
+            UPDATE proveedores
             SET empresa = %s, contacto = %s, telefono = %s, ciudad = %s
             WHERE id_proveedor = %s
         ''', (form.empresa.data, form.contacto.data, form.telefono.data, form.ciudad.data, proveedor_id))
@@ -568,11 +617,12 @@ def eliminar_proveedor(proveedor_id):
 @login_required
 def facturacion():
     conn = obtener_conexion()
-    cursor = conn.cursor(dictionary=True)
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
     cursor.execute('''
-        SELECT f.numero, c.nombre AS cliente, DATE_FORMAT(f.fecha, '%Y-%m-%d') AS fecha, f.total, f.estado
+        SELECT f.numero, c.nombre AS cliente, TO_CHAR(f.fecha, 'YYYY-MM-DD') AS fecha, f.total, f.estado
         FROM facturas f
         LEFT JOIN clientes c ON f.id_cliente = c.id_cliente
+        ORDER BY f.id_factura
     ''')
     facturas_db = cursor.fetchall()
     cursor.close()
@@ -586,18 +636,19 @@ def formulario_facturacion():
     form = FacturacionForm()
     if form.validate_on_submit():
         conn = obtener_conexion()
-        cursor = conn.cursor(dictionary=True)
-        
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
+
         cursor.execute('SELECT id_cliente FROM clientes WHERE nombre = %s LIMIT 1', (form.cliente.data,))
         cli = cursor.fetchone()
-        
+
         if not cli:
             cursor.execute('''
                 INSERT INTO clientes (nombre, email, telefono, estado)
                 VALUES (%s, %s, %s, %s)
+                RETURNING id_cliente
             ''', (form.cliente.data, 'sin_email@dominio.com', '0000000000', 'Activo'))
+            id_cliente = cursor.fetchone()['id_cliente']
             conn.commit()
-            id_cliente = cursor.lastrowid
         else:
             id_cliente = cli['id_cliente']
 
@@ -608,10 +659,69 @@ def formulario_facturacion():
         conn.commit()
         cursor.close()
         conn.close()
-        
+
         flash('Factura guardada correctamente.', 'success')
         return redirect(url_for('facturacion'))
     return render_template('formulario_facturacion.html', form=form)
+
+
+@app.route('/facturacion/editar/<string:numero>', methods=['GET', 'POST'])
+@login_required
+def editar_factura(numero):
+    conn = obtener_conexion()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    cursor.execute('''
+        SELECT f.numero, c.nombre AS cliente, TO_CHAR(f.fecha, 'YYYY-MM-DD') AS fecha, f.total, f.estado
+        FROM facturas f
+        LEFT JOIN clientes c ON f.id_cliente = c.id_cliente
+        WHERE f.numero = %s
+        LIMIT 1
+    ''', (numero,))
+    factura = cursor.fetchone()
+
+    if not factura:
+        cursor.close()
+        conn.close()
+        flash('La factura solicitada no existe.', 'danger')
+        return redirect(url_for('facturacion'))
+
+    form = FacturacionForm(data={
+        'numero': factura['numero'],
+        'cliente': factura['cliente'],
+        'fecha': factura['fecha'],
+        'total': float(factura['total']),
+        'estado': factura['estado']
+    })
+
+    if form.validate_on_submit():
+        cursor.execute('SELECT id_cliente FROM clientes WHERE nombre = %s LIMIT 1', (form.cliente.data,))
+        cli = cursor.fetchone()
+
+        if not cli:
+            cursor.execute('''
+                INSERT INTO clientes (nombre, email, telefono, estado)
+                VALUES (%s, %s, %s, %s)
+                RETURNING id_cliente
+            ''', (form.cliente.data, 'sin_email@dominio.com', '0000000000', 'Activo'))
+            id_cliente = cursor.fetchone()['id_cliente']
+        else:
+            id_cliente = cli['id_cliente']
+
+        cursor.execute('''
+            UPDATE facturas
+            SET numero = %s, id_cliente = %s, fecha = %s, total = %s, estado = %s
+            WHERE numero = %s
+        ''', (form.numero.data, id_cliente, form.fecha.data, form.total.data, form.estado.data, numero))
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        flash('Factura actualizada correctamente.', 'success')
+        return redirect(url_for('facturacion'))
+
+    cursor.close()
+    conn.close()
+    return render_template('formulario_facturacion.html', form=form, factura=factura)
 
 
 @app.route('/facturacion/eliminar/<string:numero>', methods=['POST'])
@@ -628,7 +738,7 @@ def eliminar_factura(numero):
 
 
 if __name__ == '__main__':
-    print(">>> Conectando e inicializando la base de datos MySQL...")
+    print(">>> Conectando e inicializando la base de datos PostgreSQL...")
     inicializar_base_datos()
     print(">>> Iniciando servidor Flask...")
     app.run(debug=True)
